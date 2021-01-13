@@ -4,9 +4,17 @@
 * data path is split on '/' and each element is treated as a string. Therefore, the path is compatible with object keys
 * but does not support arrays.
 */
+import * as dotenv from 'dotenv'
 import * as fs from 'fs'
 
-const DATA_SPACE_KEY = 'com.liquid-labs.federated-data'
+const FJSON_DATA_SPACE_KEY = 'com.liquid-labs.federated-json'
+
+if (!process.env.LIQ_PLAYGROUND) {
+  const envResult = dotenv.config({ path: `${process.env.HOME}/.liq/settings.sh` })
+  if (envResult.error) {
+    throw envResult.error
+  }
+}
 
 const readFJSON = (filePath) => {
   const dataBits = fs.readFileSync(filePath)
@@ -15,7 +23,7 @@ const readFJSON = (filePath) => {
   const mountSpecs = getMountSpecs(data)
   if (mountSpecs) {
     for (const mntSpec of mountSpecs) {
-      const { dataFile, mountPoint, finalKey } = processMountSpec(mntSpec)
+      const { dataFile, mountPoint, finalKey } = processMountSpec(mntSpec, data)
       const subData = readFJSON(dataFile)
 
       mountPoint[finalKey] = subData
@@ -43,12 +51,14 @@ const writeFJSON = (filePath, data) => {
 }
 
 const getMountSpecs = (data) =>
-  data._meta && data._meta[DATA_SPACE_KEY] && data._meta[DATA_SPACE_KEY].mountSpecs
+  data._meta && data._meta[FJSON_DATA_SPACE_KEY] && data._meta[FJSON_DATA_SPACE_KEY].mountSpecs
 
 const processMountSpec = (mntSpec, data) => {
-  const { dataPath, dataFile } = mntSpec
+  let { dataPath, dataFile } = mntSpec
 
-  const pathTrail = dataPath.split()
+  dataFile = dataFile.replace('${LIQ_PLAYGROUND}', process.env.LIQ_PLAYGROUND)
+
+  const pathTrail = dataPath.split('/')
   const finalKey = pathTrail.pop()
 
   let mountPoint = data
@@ -59,4 +69,4 @@ const processMountSpec = (mntSpec, data) => {
   return { dataFile, mountPoint, finalKey }
 }
 
-export { readFJSON, writeFJSON }
+export { readFJSON, writeFJSON, FJSON_DATA_SPACE_KEY }

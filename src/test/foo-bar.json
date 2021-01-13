@@ -1,0 +1,11 @@
+{
+  "_meta": {
+    "com.liquid-labs.federated-json": {
+      "mountSpecs": [
+        { "dataPath": "baz", "dataFile": "${LIQ_PLAYGROUND}/liquid-labs/federated-json/src/test/baz.json" }
+      ]
+    }
+  },
+  "baz": null,
+  "some-key": "I'm a string!"
+}

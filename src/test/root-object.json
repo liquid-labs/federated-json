@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "com.liquid-labs.federated-json": {
+      "mountSpecs": [
+        { "dataPath": "foo/bar", "dataFile": "${LIQ_PLAYGROUND}/liquid-labs/federated-json/src/test/foo-bar.json" }
+      ]
+    }
+  },
+  "foo": {
+    "bar": null,
+    "boolean": true
+  },
+  "other-data": 123
+}

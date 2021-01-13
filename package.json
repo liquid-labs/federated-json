@@ -13,7 +13,9 @@
     "test": "JS_SRC=src catalyst-scripts test",
     "postversion": "git push && git push --tags"
   },
-  "files": [ "dist/" ],
+  "files": [
+    "dist/"
+  ],
   "keywords": [],
   "author": "Zane Rockenbaugh <zane@liquid-labs.com>",
   "license": "UNLICENSED",
@@ -29,6 +31,9 @@
     "orgBase": "git@github.com:Liquid-Labs/Liquid-Labs.git"
   },
   "devDependencies": {
-    "@liquid-labs/catalyst-scripts": "file:.yalc/@liquid-labs/catalyst-scripts"
+    "@liquid-labs/catalyst-scripts": "^1.0.0-alpha.32"
+  },
+  "dependencies": {
+    "dotenv": "^8.2.0"
   }
 }
