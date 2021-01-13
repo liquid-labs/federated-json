@@ -2,7 +2,7 @@
 
 import * as fs from 'fs'
 
-import { readFJSON, writeFJSON, FJSON_DATA_SPACE_KEY } from '../federated-json'
+import { FJSON_DATA_SPACE_KEY, readFJSON, setLiqPlayground, writeFJSON } from '../federated-json'
 
 const testDir = '/tmp/federated-json.test'
 const expectedBaz = "just a string"
@@ -31,6 +31,28 @@ const expectedRootObject = {
   "other-data": 123
 }
 
+describe('setLiqPlayground', () => {
+  var LIQ_PLAYGROUND = process.env.LIQ_PLAYGROUND
+  afterEach(() => process.env.LIQ_PLAYGROUND = LIQ_PLAYGROUND)
+
+  test(`fails when '~/.liq/setting.sh' fails to load`, () => {
+    process.env.HOME = '/'
+    delete process.env.LIQ_PLAYGROUND
+    expect(() => setLiqPlayground()).toThrow()
+  })
+
+  test(`can manually set LIQ_PLAYGROUND`, () => {
+    const testPath = '/some/path'
+    setLiqPlayground(testPath)
+    expect(process.env.LIQ_PLAYGROUND).toBe(testPath)
+  })
+
+  test(`does not override LIQ_PLAYGROUND with default call`, () => {
+    setLiqPlayground('blah')
+    setLiqPlayground()
+    expect(process.env.LIQ_PLAYGROUND).toBe('blah')
+  })
+})
 
 describe('readFJSON', () => {
   test.each`
@@ -53,7 +75,7 @@ describe('writeFJSON', () => {
   test('write {}', () => {
     const testFile = `${testDir}/empty-object.json`
     const testData = {}
-    writeFJSON(testFile, testData)
+    writeFJSON(testData, testFile)
     const contents = fs.readFileSync(testFile)
     expect(JSON.parse(contents)).toEqual(testData)
   })
@@ -66,7 +88,7 @@ describe('writeFJSON', () => {
       "_meta": { [FJSON_DATA_SPACE_KEY]: { "mountSpecs": [ { "dataPath": "foo", "dataFile": barTestFile } ] } },
       "foo": testEmbed
     }
-    writeFJSON(rootTestFile, testData)
+    writeFJSON(testData, rootTestFile)
 
     // the written object will have a 'null' foo
     testData.foo = null
