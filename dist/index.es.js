@@ -122,8 +122,14 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 var FJSON_DATA_SPACE_KEY = 'com.liquid-labs.federated-json';
 
 var processPath = function processPath(path) {
+  // eslint-disable-next-line no-template-curly-in-string
   return path.replace('${LIQ_PLAYGROUND}', process.env.LIQ_PLAYGROUND);
 };
+/**
+* Adds or updates a mount point entry. WARNING: This method does not currently support sub-mounts. These must be
+* manually updated by accessing the sub-data structure and modifying it's mount points directly.
+*/
+
 
 var addMountPoint = function addMountPoint(data, dataPath, dataFile) {
   var mountSpecs = getMountSpecs(data);
@@ -137,37 +143,11 @@ var addMountPoint = function addMountPoint(data, dataPath, dataFile) {
     }
   }
 
-  var mountPoint = data;
-  var pathTrail = dataPath.split('/');
-  var ourTrail = [];
-
-  var _iterator = _createForOfIteratorHelper(pathTrail),
-      _step;
-
-  try {
-    for (_iterator.s(); !(_step = _iterator.n()).done;) {
-      var key = _step.value;
-      mountPoint = mountPoint[key];
-      var testMountSpecs = getMountSpecs(mountPoint);
-
-      if (testMountSpecs) {
-        ourTrail = [];
-      } else {
-        ourTrail.push(key);
-      }
-    }
-  } catch (err) {
-    _iterator.e(err);
-  } finally {
-    _iterator.f();
-  }
-
-  var effectivePath = ourTrail.join('/');
   var i = mountSpecs.findIndex(function (el) {
-    return el.dataPath === effectivePath;
+    return el.dataPath === dataPath;
   });
   var mountSpec = {
-    dataPath: effectivePath,
+    dataPath: dataPath,
     dataFile: dataFile
   };
 
@@ -211,19 +191,18 @@ var readFJSON = function readFJSON(filePath, options) {
   var data = JSON.parse(dataBits);
 
   if (rememberSource) {
-    var myMeta = ensureMyMeta(data);
-    myMeta.sourceFile = filePath;
+    setSource(data, filePath);
   }
 
   var mountSpecs = getMountSpecs(data);
 
   if (mountSpecs) {
-    var _iterator2 = _createForOfIteratorHelper(mountSpecs),
-        _step2;
+    var _iterator = _createForOfIteratorHelper(mountSpecs),
+        _step;
 
     try {
-      for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-        var mntSpec = _step2.value;
+      for (_iterator.s(); !(_step = _iterator.n()).done;) {
+        var mntSpec = _step.value;
 
         var _processMountSpec = processMountSpec(mntSpec, data),
             dataFile = _processMountSpec.dataFile,
@@ -234,13 +213,22 @@ var readFJSON = function readFJSON(filePath, options) {
         mountPoint[finalKey] = subData;
       }
     } catch (err) {
-      _iterator2.e(err);
+      _iterator.e(err);
     } finally {
-      _iterator2.f();
+      _iterator.f();
     }
   }
 
   return data;
+};
+/**
+* Set's the meta source information.
+*/
+
+
+var setSource = function setSource(data, filePath) {
+  var myMeta = ensureMyMeta(data);
+  myMeta.sourceFile = filePath;
 };
 /**
 * Writes a standard or federated JSON file by analysing the objects meta data and breaking the saved files up
@@ -252,12 +240,12 @@ var writeFJSON = function writeFJSON(data, filePath) {
   var mountSpecs = getMountSpecs(data);
 
   if (mountSpecs) {
-    var _iterator3 = _createForOfIteratorHelper(mountSpecs),
-        _step3;
+    var _iterator2 = _createForOfIteratorHelper(mountSpecs),
+        _step2;
 
     try {
-      for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-        var mntSpec = _step3.value;
+      for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+        var mntSpec = _step2.value;
 
         var _processMountSpec2 = processMountSpec(mntSpec, data),
             mountPoint = _processMountSpec2.mountPoint,
@@ -268,9 +256,9 @@ var writeFJSON = function writeFJSON(data, filePath) {
         writeFJSON(subData, mntSpec.dataFile);
       }
     } catch (err) {
-      _iterator3.e(err);
+      _iterator2.e(err);
     } finally {
-      _iterator3.f();
+      _iterator2.f();
     }
   }
 
@@ -294,9 +282,11 @@ var ensureMyMeta = function ensureMyMeta(data) {
     if (data._meta[FJSON_DATA_SPACE_KEY] === undefined) {
       data._meta[FJSON_DATA_SPACE_KEY] = {};
     }
+
+    myMeta = getMyMeta(data);
   }
 
-  return data._meta[FJSON_DATA_SPACE_KEY];
+  return myMeta;
 };
 /**
 * Internal function to test for and extract mount specs from the provided JSON object.
@@ -320,18 +310,18 @@ var processMountSpec = function processMountSpec(mntSpec, data) {
   var finalKey = pathTrail.pop();
   var mountPoint = data;
 
-  var _iterator4 = _createForOfIteratorHelper(pathTrail),
-      _step4;
+  var _iterator3 = _createForOfIteratorHelper(pathTrail),
+      _step3;
 
   try {
-    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-      var key = _step4.value;
+    for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+      var key = _step3.value;
       mountPoint = mountPoint[key];
     }
   } catch (err) {
-    _iterator4.e(err);
+    _iterator3.e(err);
   } finally {
-    _iterator4.f();
+    _iterator3.f();
   }
 
   return {
@@ -343,5 +333,5 @@ var processMountSpec = function processMountSpec(mntSpec, data) {
 
 setLiqPlayground();
 
-export { FJSON_DATA_SPACE_KEY, readFJSON, setLiqPlayground, addMountPoint, writeFJSON };
+export { FJSON_DATA_SPACE_KEY, addMountPoint, readFJSON, setLiqPlayground, setSource, writeFJSON };
 //# sourceMappingURL=index.es.js.map

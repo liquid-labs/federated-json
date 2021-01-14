@@ -10,6 +10,7 @@ import * as fs from 'fs'
 const FJSON_DATA_SPACE_KEY = 'com.liquid-labs.federated-json'
 
 const processPath = (path) => {
+  // eslint-disable-next-line no-template-curly-in-string
   return path.replace('${LIQ_PLAYGROUND}', process.env.LIQ_PLAYGROUND)
 }
 
@@ -28,8 +29,8 @@ const addMountPoint = (data, dataPath, dataFile) => {
     }
   }
 
-  const i = mountSpecs.findIndex((el) => el.dataPath === dataPath )
-  const mountSpec = { dataPath: dataPath, dataFile }
+  const i = mountSpecs.findIndex((el) => el.dataPath === dataPath)
+  const mountSpec = { dataPath : dataPath, dataFile }
   if (i !== -1) {
     mountSpecs[i] = mountSpec
   }
@@ -47,7 +48,7 @@ const setLiqPlayground = (path) => {
     process.env.LIQ_PLAYGROUND = path
   }
   else if (!process.env.LIQ_PLAYGROUND) {
-    const envResult = dotenv.config({ path: `${process.env.HOME}/.liq/settings.sh` })
+    const envResult = dotenv.config({ path : `${process.env.HOME}/.liq/settings.sh` })
     if (envResult.error) {
       throw envResult.error
     }
