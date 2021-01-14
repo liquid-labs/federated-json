@@ -237,6 +237,15 @@ var setSource = function setSource(data, filePath) {
 
 
 var writeFJSON = function writeFJSON(data, filePath) {
+  if (filePath === undefined) {
+    var myMeta = getMyMeta(data);
+    filePath = myMeta && myMeta.sourceFile;
+  }
+
+  if (!filePath) {
+    throw new Error('No explicit filePath provided and no source found in object meta data.');
+  }
+
   var mountSpecs = getMountSpecs(data);
 
   if (mountSpecs) {
