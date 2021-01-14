@@ -96,6 +96,14 @@ const setSource = (data, filePath) => {
 * accourding to the configuration.
 */
 const writeFJSON = (data, filePath) => {
+  if (filePath === undefined) {
+    const myMeta = getMyMeta(data)
+    filePath = myMeta && myMeta.sourceFile
+  }
+  if (!filePath) {
+    throw new Error(`No explicit filePath provided and no source found in object meta data.`)
+  }
+
   const mountSpecs = getMountSpecs(data)
   if (mountSpecs) {
     for (const mntSpec of mountSpecs) {
