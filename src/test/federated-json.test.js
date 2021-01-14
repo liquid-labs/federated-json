@@ -161,7 +161,7 @@ describe('writeFJSON', () => {
     expect(JSON.parse(barContents)).toEqual(testEmbed)
   })
 
-  test(`write to meta source`, () => {
+  test('write to meta source', () => {
     const testFile = `${testDir}/empty-object.json`
     const testData = {}
     setSource(testData, testFile)
@@ -170,7 +170,7 @@ describe('writeFJSON', () => {
     expect(JSON.parse(contents)).toEqual(testData)
   })
 
-  test(`write fails with no target path can be discerned`, () => {
+  test('write fails with no target path can be discerned', () => {
     const testData = {}
     expect(() => writeFJSON(testData)).toThrow()
   })

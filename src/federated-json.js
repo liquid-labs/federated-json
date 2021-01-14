@@ -101,7 +101,7 @@ const writeFJSON = (data, filePath) => {
     filePath = myMeta && myMeta.sourceFile
   }
   if (!filePath) {
-    throw new Error(`No explicit filePath provided and no source found in object meta data.`)
+    throw new Error('No explicit filePath provided and no source found in object meta data.')
   }
 
   const mountSpecs = getMountSpecs(data)
