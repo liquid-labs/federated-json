@@ -9,6 +9,35 @@ import * as fs from 'fs'
 
 const FJSON_DATA_SPACE_KEY = 'com.liquid-labs.federated-json'
 
+const processPath = (path) => {
+  return path.replace('${LIQ_PLAYGROUND}', process.env.LIQ_PLAYGROUND)
+}
+
+/**
+* Adds or updates a mount point entry. WARNING: This method does not currently support sub-mounts. These must be
+* manually updated by accessing the sub-data structure and modifying it's mount points directly.
+*/
+const addMountPoint = (data, dataPath, dataFile) => {
+  let mountSpecs = getMountSpecs(data)
+
+  if (mountSpecs === undefined) {
+    mountSpecs = []
+    const myMeta = ensureMyMeta(data)
+    if (myMeta.mountSpecs === undefined) {
+      myMeta.mountSpecs = mountSpecs
+    }
+  }
+
+  const i = mountSpecs.findIndex((el) => el.dataPath === dataPath )
+  const mountSpec = { dataPath: dataPath, dataFile }
+  if (i !== -1) {
+    mountSpecs[i] = mountSpec
+  }
+  else {
+    mountSpecs.push(mountSpec)
+  }
+}
+
 /**
 * Set the 'LIQ_PLAYGROUND' environment variable to the provided `path` or from the standard liq settings. Primarily
 * used for library setup and testing.
@@ -25,15 +54,20 @@ const setLiqPlayground = (path) => {
   }
 }
 
-setLiqPlayground()
-
 /**
 * Reads a JSON file and processes for federated mount points to construct a composite JSON object from one or more
 * files.
 */
-const readFJSON = (filePath) => {
-  const dataBits = fs.readFileSync(filePath)
+const readFJSON = (filePath, options) => {
+  const { rememberSource } = options || {}
+
+  const processedPath = processPath(filePath)
+  const dataBits = fs.readFileSync(processedPath)
   const data = JSON.parse(dataBits)
+
+  if (rememberSource) {
+    setSource(data, filePath)
+  }
 
   const mountSpecs = getMountSpecs(data)
   if (mountSpecs) {
@@ -46,6 +80,14 @@ const readFJSON = (filePath) => {
   }
 
   return data
+}
+
+/**
+* Set's the meta source information.
+*/
+const setSource = (data, filePath) => {
+  const myMeta = ensureMyMeta(data)
+  myMeta.sourceFile = filePath
 }
 
 /**
@@ -66,14 +108,30 @@ const writeFJSON = (data, filePath) => {
   }
 
   const dataString = JSON.stringify(data)
-  fs.writeFileSync(filePath, dataString)
+  const processedPath = processPath(filePath)
+  fs.writeFileSync(processedPath, dataString)
+}
+
+const getMyMeta = (data) => data._meta && data._meta[FJSON_DATA_SPACE_KEY]
+
+const ensureMyMeta = (data) => {
+  let myMeta = getMyMeta(data)
+  if (!myMeta) {
+    if (data._meta === undefined) { data._meta = {} }
+    if (data._meta[FJSON_DATA_SPACE_KEY] === undefined) { data._meta[FJSON_DATA_SPACE_KEY] = {} }
+    myMeta = getMyMeta(data)
+  }
+
+  return myMeta
 }
 
 /**
 * Internal function to test for and extract mount specs from the provided JSON object.
 */
-const getMountSpecs = (data) =>
-  data._meta && data._meta[FJSON_DATA_SPACE_KEY] && data._meta[FJSON_DATA_SPACE_KEY].mountSpecs
+const getMountSpecs = (data) => {
+  const myMeta = getMyMeta(data)
+  return myMeta && myMeta.mountSpecs
+}
 
 /**
 * Internal function to process a mount spec into useful components utilized by the `readFJSON` and `writeFJSON`.
@@ -81,7 +139,7 @@ const getMountSpecs = (data) =>
 const processMountSpec = (mntSpec, data) => {
   let { dataPath, dataFile } = mntSpec
 
-  dataFile = dataFile.replace('${LIQ_PLAYGROUND}', process.env.LIQ_PLAYGROUND)
+  dataFile = processPath(dataFile)
 
   const pathTrail = dataPath.split('/')
   const finalKey = pathTrail.pop()
@@ -94,4 +152,6 @@ const processMountSpec = (mntSpec, data) => {
   return { dataFile, mountPoint, finalKey }
 }
 
-export { FJSON_DATA_SPACE_KEY, readFJSON, setLiqPlayground, writeFJSON }
+setLiqPlayground()
+
+export { addMountPoint, FJSON_DATA_SPACE_KEY, readFJSON, setLiqPlayground, setSource, writeFJSON }

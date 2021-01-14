@@ -2,7 +2,7 @@
 
 import * as fs from 'fs'
 
-import { FJSON_DATA_SPACE_KEY, readFJSON, setLiqPlayground, writeFJSON } from '../federated-json'
+import { addMountPoint, FJSON_DATA_SPACE_KEY, readFJSON, setLiqPlayground, setSource, writeFJSON } from '../federated-json'
 
 const testDir = '/tmp/federated-json.test'
 const expectedBaz = "just a string"
@@ -31,6 +31,8 @@ const expectedRootObject = {
   "other-data": 123
 }
 
+const EMPTY_OBJ_SRC='./src/test/empty-object.json'
+
 describe('setLiqPlayground', () => {
   var LIQ_PLAYGROUND = process.env.LIQ_PLAYGROUND
   afterEach(() => process.env.LIQ_PLAYGROUND = LIQ_PLAYGROUND)
@@ -57,13 +59,73 @@ describe('setLiqPlayground', () => {
 describe('readFJSON', () => {
   test.each`
     description | file | expected
-    ${'empty-object.json/trivial object'} | ${'./src/test/empty-object.json'} | ${{}}
+    ${'empty-object.json/trivial object'} | ${EMPTY_OBJ_SRC} | ${{}}
     ${'baz.json/simple string'} | ${'./src/test/baz.json'} | ${expectedBaz}
     ${'root-object.json/complex object'} | ${'./src/test/root-object.json'} | ${expectedRootObject}
   `('loads $description', ({file, expected}) => {
     const data = readFJSON(file)
     expect(data).toEqual(expected)
   })
+
+  test(`can remember the source`, () => {
+    const data = readFJSON(EMPTY_OBJ_SRC, { rememberSource: true })
+    expect(data).toEqual({ "_meta": { [FJSON_DATA_SPACE_KEY]: { "sourceFile": EMPTY_OBJ_SRC }}})
+  })
+})
+
+describe('addMountPoint', () => {
+  let data
+  beforeEach(() => data = { "foo": { "bar": true }, "baz": true })
+
+  test('sets initial root mount points', () => {
+    addMountPoint(data, 'foo', './some-file.json')
+    expect(data._meta).toEqual({
+      [FJSON_DATA_SPACE_KEY]: { "mountSpecs": [{ "dataPath": "foo", "dataFile": "./some-file.json"}] }
+    })
+  })
+
+  test('sets initial root mount points', () => {
+    addMountPoint(data, 'foo', './some-file.json')
+    expect(data._meta).toEqual({
+      [FJSON_DATA_SPACE_KEY]: { "mountSpecs": [{ "dataPath": "foo", "dataFile": "./some-file.json"}] }
+    })
+  })
+
+  test('updates mount points', () => {
+    addMountPoint(data, 'foo', './some-file.json')
+    addMountPoint(data, 'foo', './another-file.json')
+    expect(data._meta).toEqual({
+      [FJSON_DATA_SPACE_KEY]: { "mountSpecs": [{ "dataPath": "foo", "dataFile": "./another-file.json"}] }
+    })
+  })
+
+  test('plays nice with setSource', () => {
+    const metaModel = {
+      [FJSON_DATA_SPACE_KEY]: { "sourceFile": "./our-file.json" }
+    }
+    setSource(data, './our-file.json')
+    expect(data._meta).toEqual(metaModel)
+
+    addMountPoint(data, 'foo', './some-file.json')
+    metaModel[FJSON_DATA_SPACE_KEY].mountSpecs = [{ "dataPath": "foo", "dataFile": "./some-file.json"}]
+    expect(data._meta).toEqual(metaModel)
+
+    addMountPoint(data, 'foo', './another-file.json')
+    metaModel[FJSON_DATA_SPACE_KEY].mountSpecs = [{ "dataPath": "foo", "dataFile": "./another-file.json"}]
+    expect(data._meta).toEqual(metaModel)
+  })
+
+  /* TODO
+  test('sets embedded mount points', () => {
+    addMountPoint(data, 'foo', './some-file.json')
+    addMountPoint(data, 'foo/bar', './another-file.json')
+    expect(data._meta).toEqual({
+      [FJSON_DATA_SPACE_KEY]: { "mountSpecs": [{ "dataPath": "foo", "dataFile": "./some-file.json"}] }
+    })
+    expect(data.foo._meta).toEqual({
+      [FJSON_DATA_SPACE_KEY]: { "mountSpecs": [{ "dataPath": "bar", "dataFile": "./another-file.json"}] }
+    })
+  })*/
 })
 
 describe('writeFJSON', () => {
