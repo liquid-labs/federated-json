@@ -33,10 +33,10 @@ const expectedRootObject = {
 
 const EMPTY_OBJ_SRC = './src/test/empty-object.json'
 
-describe('setLiqPlayground', () => {
-  var LIQ_PLAYGROUND = process.env.LIQ_PLAYGROUND
-  afterEach(() => { process.env.LIQ_PLAYGROUND = LIQ_PLAYGROUND })
+const LIQ_PLAYGROUND = process.env.LIQ_PLAYGROUND
+afterEach(() => { process.env.LIQ_PLAYGROUND = LIQ_PLAYGROUND })
 
+describe('setLiqPlayground', () => {
   test('fails when \'~/.liq/setting.sh\' fails to load', () => {
     process.env.HOME = '/'
     delete process.env.LIQ_PLAYGROUND
@@ -70,6 +70,18 @@ describe('readFJSON', () => {
   test('can remember the source', () => {
     const data = readFJSON(EMPTY_OBJ_SRC, { rememberSource : true })
     expect(data).toEqual({ _meta : { [FJSON_DATA_SPACE_KEY] : { sourceFile : EMPTY_OBJ_SRC } } })
+  })
+
+  test('throws useful error when file not found (no path replacement)', () => {
+    const badFileName = '/foo/bar/non-existent-file.json'
+    expect(() => { readFJSON(badFileName)}).toThrow(new RegExp(badFileName))
+  })
+
+  test('throws useful error when file not found (with path replacement)', () => {
+    const badFileBaseName = 'non-existent-file.json'
+    const badFileName = `\${LIQ_PLAYGROUND}/${badFileBaseName}`
+    const processedFileName = `${process.env.LIQ_PLAYGROUND}/${badFileBaseName}`
+    expect(() => { readFJSON(badFileName)}).toThrow(new RegExp(`\\${badFileName}.*\\('${processedFileName}'\\)`))
   })
 })
 

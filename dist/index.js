@@ -194,6 +194,12 @@ var readFJSON = function readFJSON(filePath, options) {
       rememberSource = _ref.rememberSource;
 
   var processedPath = processPath(filePath);
+
+  if (!fs.existsSync(processedPath)) {
+    var msg = "No such file: '".concat(filePath, "'") + (filePath !== processedPath ? " ('".concat(processedPath, "')") : '');
+    throw new Error(msg);
+  }
+
   var dataBits = fs.readFileSync(processedPath);
   var data = JSON.parse(dataBits);
 

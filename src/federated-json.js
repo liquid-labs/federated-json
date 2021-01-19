@@ -63,6 +63,10 @@ const readFJSON = (filePath, options) => {
   const { rememberSource } = options || {}
 
   const processedPath = processPath(filePath)
+  if (!fs.existsSync(processedPath)) {
+    const msg = `No such file: '${filePath}'` + (filePath !== processedPath ? ` ('${processedPath}')` : '')
+    throw new Error(msg)
+  }
   const dataBits = fs.readFileSync(processedPath)
   const data = JSON.parse(dataBits)
 

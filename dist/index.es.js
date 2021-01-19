@@ -1,4 +1,4 @@
-import fs__default, { readFileSync, writeFileSync } from 'fs';
+import fs__default, { existsSync, readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 
 /* @flow */
@@ -187,6 +187,12 @@ var readFJSON = function readFJSON(filePath, options) {
       rememberSource = _ref.rememberSource;
 
   var processedPath = processPath(filePath);
+
+  if (!existsSync(processedPath)) {
+    var msg = "No such file: '".concat(filePath, "'") + (filePath !== processedPath ? " ('".concat(processedPath, "')") : '');
+    throw new Error(msg);
+  }
+
   var dataBits = readFileSync(processedPath);
   var data = JSON.parse(dataBits);
 
