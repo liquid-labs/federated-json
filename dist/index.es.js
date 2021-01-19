@@ -1,6 +1,53 @@
 import fs__default, { existsSync, readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 
+function _arrayLikeToArray(arr, len) {
+  if (len == null || len > arr.length) len = arr.length;
+
+  for (var i = 0, arr2 = new Array(len); i < len; i++) {
+    arr2[i] = arr[i];
+  }
+
+  return arr2;
+}
+
+var arrayLikeToArray = _arrayLikeToArray;
+
+function _arrayWithoutHoles(arr) {
+  if (Array.isArray(arr)) return arrayLikeToArray(arr);
+}
+
+var arrayWithoutHoles = _arrayWithoutHoles;
+
+function _iterableToArray(iter) {
+  if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter);
+}
+
+var iterableToArray = _iterableToArray;
+
+function _unsupportedIterableToArray(o, minLen) {
+  if (!o) return;
+  if (typeof o === "string") return arrayLikeToArray(o, minLen);
+  var n = Object.prototype.toString.call(o).slice(8, -1);
+  if (n === "Object" && o.constructor) n = o.constructor.name;
+  if (n === "Map" || n === "Set") return Array.from(o);
+  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return arrayLikeToArray(o, minLen);
+}
+
+var unsupportedIterableToArray = _unsupportedIterableToArray;
+
+function _nonIterableSpread() {
+  throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+
+var nonIterableSpread = _nonIterableSpread;
+
+function _toConsumableArray(arr) {
+  return arrayWithoutHoles(arr) || iterableToArray(arr) || unsupportedIterableToArray(arr) || nonIterableSpread();
+}
+
+var toConsumableArray = _toConsumableArray;
+
 /* @flow */
 /*::
 
@@ -114,16 +161,43 @@ function config (options /*: ?DotenvConfigOptions */) /*: DotenvConfigOutput */ 
 
 var config_1 = config;
 
-function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$1(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+function _unsupportedIterableToArray$1(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$1(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$1(o, minLen); }
 
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+function _arrayLikeToArray$1(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 var FJSON_DATA_SPACE_KEY = 'com.liquid-labs.federated-json';
+var replaceRE = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g;
 
 var processPath = function processPath(path) {
-  // eslint-disable-next-line no-template-curly-in-string
-  return path.replace('${LIQ_PLAYGROUND}', process.env.LIQ_PLAYGROUND);
+  var matches = toConsumableArray(path.matchAll(replaceRE));
+
+  matches.reverse(); // The reverse allows us to use the start and end indexes without messing up the string.
+
+  var _iterator = _createForOfIteratorHelper(matches),
+      _step;
+
+  try {
+    for (_iterator.s(); !(_step = _iterator.n()).done;) {
+      var matchInfo = _step.value;
+      var match = matchInfo[0];
+      var key = matchInfo[1];
+      var value = process.env[key];
+      var matchStart = matchInfo.index;
+
+      if (value === undefined) {
+        throw new Error("Could not process path replacement for '".concat(key, "'; no such environment parameter found."));
+      }
+
+      path = path.substring(0, matchStart) + value + path.substring(matchStart + match.length);
+    }
+  } catch (err) {
+    _iterator.e(err);
+  } finally {
+    _iterator.f();
+  }
+
+  return path;
 };
 /**
 * Adds or updates a mount point entry. WARNING: This method does not currently support sub-mounts. These must be
@@ -203,12 +277,12 @@ var readFJSON = function readFJSON(filePath, options) {
   var mountSpecs = getMountSpecs(data);
 
   if (mountSpecs) {
-    var _iterator = _createForOfIteratorHelper(mountSpecs),
-        _step;
+    var _iterator2 = _createForOfIteratorHelper(mountSpecs),
+        _step2;
 
     try {
-      for (_iterator.s(); !(_step = _iterator.n()).done;) {
-        var mntSpec = _step.value;
+      for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+        var mntSpec = _step2.value;
 
         var _processMountSpec = processMountSpec(mntSpec, data),
             dataFile = _processMountSpec.dataFile,
@@ -219,9 +293,9 @@ var readFJSON = function readFJSON(filePath, options) {
         mountPoint[finalKey] = subData;
       }
     } catch (err) {
-      _iterator.e(err);
+      _iterator2.e(err);
     } finally {
-      _iterator.f();
+      _iterator2.f();
     }
   }
 
@@ -255,12 +329,12 @@ var writeFJSON = function writeFJSON(data, filePath) {
   var mountSpecs = getMountSpecs(data);
 
   if (mountSpecs) {
-    var _iterator2 = _createForOfIteratorHelper(mountSpecs),
-        _step2;
+    var _iterator3 = _createForOfIteratorHelper(mountSpecs),
+        _step3;
 
     try {
-      for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-        var mntSpec = _step2.value;
+      for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+        var mntSpec = _step3.value;
 
         var _processMountSpec2 = processMountSpec(mntSpec, data),
             mountPoint = _processMountSpec2.mountPoint,
@@ -271,9 +345,9 @@ var writeFJSON = function writeFJSON(data, filePath) {
         writeFJSON(subData, mntSpec.dataFile);
       }
     } catch (err) {
-      _iterator2.e(err);
+      _iterator3.e(err);
     } finally {
-      _iterator2.f();
+      _iterator3.f();
     }
   }
 
@@ -325,18 +399,18 @@ var processMountSpec = function processMountSpec(mntSpec, data) {
   var finalKey = pathTrail.pop();
   var mountPoint = data;
 
-  var _iterator3 = _createForOfIteratorHelper(pathTrail),
-      _step3;
+  var _iterator4 = _createForOfIteratorHelper(pathTrail),
+      _step4;
 
   try {
-    for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-      var key = _step3.value;
+    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+      var key = _step4.value;
       mountPoint = mountPoint[key];
     }
   } catch (err) {
-    _iterator3.e(err);
+    _iterator4.e(err);
   } finally {
-    _iterator3.f();
+    _iterator4.f();
   }
 
   return {
@@ -348,5 +422,5 @@ var processMountSpec = function processMountSpec(mntSpec, data) {
 
 setLiqPlayground();
 
-export { FJSON_DATA_SPACE_KEY, addMountPoint, readFJSON, setLiqPlayground, setSource, writeFJSON };
+export { FJSON_DATA_SPACE_KEY, addMountPoint, processPath, readFJSON, setLiqPlayground, setSource, writeFJSON };
 //# sourceMappingURL=index.es.js.map

@@ -9,9 +9,23 @@ import * as fs from 'fs'
 
 const FJSON_DATA_SPACE_KEY = 'com.liquid-labs.federated-json'
 
+const replaceRE = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g
+
 const processPath = (path) => {
-  // eslint-disable-next-line no-template-curly-in-string
-  return path.replace('${LIQ_PLAYGROUND}', process.env.LIQ_PLAYGROUND)
+  const matches = [...path.matchAll(replaceRE)]
+  matches.reverse() // The reverse allows us to use the start and end indexes without messing up the string.
+  for (const matchInfo of matches) {
+    const match = matchInfo[0]
+    const key = matchInfo[1]
+    const value = process.env[key]
+    const matchStart = matchInfo.index
+    if (value === undefined) {
+      throw new Error(`Could not process path replacement for '${key}'; no such environment parameter found.`)
+    }
+    path = path.substring(0, matchStart) + value + path.substring(matchStart + match.length)
+  }
+
+  return path
 }
 
 /**
@@ -167,4 +181,4 @@ const processMountSpec = (mntSpec, data) => {
 
 setLiqPlayground()
 
-export { addMountPoint, FJSON_DATA_SPACE_KEY, readFJSON, setLiqPlayground, setSource, writeFJSON }
+export { addMountPoint, FJSON_DATA_SPACE_KEY, processPath, readFJSON, setLiqPlayground, setSource, writeFJSON }

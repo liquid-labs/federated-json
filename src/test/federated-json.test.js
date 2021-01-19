@@ -2,7 +2,7 @@
 
 import * as fs from 'fs'
 
-import { addMountPoint, FJSON_DATA_SPACE_KEY, readFJSON, setLiqPlayground, setSource, writeFJSON } from '../federated-json'
+import { addMountPoint, FJSON_DATA_SPACE_KEY, processPath, readFJSON, setLiqPlayground, setSource, writeFJSON } from '../federated-json'
 
 const testDir = '/tmp/federated-json.test'
 const expectedBaz = 'just a string'
@@ -63,9 +63,9 @@ describe('readFJSON', () => {
     ${'baz.json/simple string'} | ${'./src/test/baz.json'} | ${expectedBaz}
     ${'root-object.json/complex object'} | ${'./src/test/root-object.json'} | ${expectedRootObject}
   `('loads $description', ({ file, expected }) => {
-  const data = readFJSON(file)
-  expect(data).toEqual(expected)
-})
+    const data = readFJSON(file)
+    expect(data).toEqual(expected)
+  })
 
   test('can remember the source', () => {
     const data = readFJSON(EMPTY_OBJ_SRC, { rememberSource : true })
@@ -138,6 +138,18 @@ describe('addMountPoint', () => {
       [FJSON_DATA_SPACE_KEY]: { "mountSpecs": [{ "dataPath": "bar", "dataFile": "./another-file.json"}] }
     })
   }) */
+})
+
+describe('processPath', () => {
+  const testLiqPlayground = '/liq/playground'
+  beforeEach(() => setLiqPlayground(testLiqPlayground))
+  test.each`
+    path | expected
+    ${'/foo/bar/no-replacement.json'} | ${'/foo/bar/no-replacement.json'}
+    ${`\${LIQ_PLAYGROUND}/data.json`} | ${`${testLiqPlayground}/data.json`}
+    `('$path => $expected', ({ path, expected }) => {
+    expect(processPath(path)).toEqual(expected)
+  })
 })
 
 describe('writeFJSON', () => {
