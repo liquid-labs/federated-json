@@ -101,7 +101,6 @@ describe('readFJSON', () => {
     ${'baz.json/simple string'} | ${'./src/test/baz.json'} | ${expectedBaz}
     ${'root-object.json/complex object'} | ${'./src/test/root-object.json'} | ${expectedRootObject}
   `('loads $description', ({ file, expected }) => {
-    console.log(fs.path)
     const data = readFJSON(file)
     expect(data).toEqual(expected)
   })
