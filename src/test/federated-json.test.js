@@ -11,7 +11,7 @@ const expectedBaz = 'just a string'
 
 const expectedRootObject = {
   _meta : {
-    'com.liquid-labs.federated-json' : {
+    [FJSON_DATA_SPACE_KEY] : {
       mountSpecs : [ // eslint-disable-next-line no-template-curly-in-string
         { dataPath : 'foo/bar', dataFile : '${TEST_DIR}/foo-bar.json' }
       ]
@@ -20,7 +20,7 @@ const expectedRootObject = {
   foo : {
     bar : {
       _meta : {
-        'com.liquid-labs.federated-json' : {
+        [FJSON_DATA_SPACE_KEY] : {
           mountSpecs : [ // eslint-disable-next-line no-template-curly-in-string
             { dataPath : 'baz', dataFile : '${TEST_DIR}/baz.json' }
           ]
