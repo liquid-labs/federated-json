@@ -9,4 +9,10 @@ describe('processPath', () => {
     `('$path => $expected', ({ path, expected }) => {
     expect(processPath(path)).toEqual(expected)
   })
+
+  test('throws useful error when replacement fails', () => {
+    const badKey = 'BLAHBLAHBLAH'
+    const origPath = `\${${badKey}}/data.json`
+    expect(() => processPath(origPath)).toThrow(new RegExp(`.'${badKey}'.*'\\${origPath}'`))
+  })
 })

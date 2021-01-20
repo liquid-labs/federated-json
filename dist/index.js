@@ -71,6 +71,8 @@ var replaceRE = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g;
 */
 
 var processPath = function processPath(path) {
+  var origPath = path; // used for error messages
+
   var matches = toConsumableArray(path.matchAll(replaceRE));
 
   matches.reverse(); // The reverse allows us to use the start and end indexes without messing up the string.
@@ -87,7 +89,7 @@ var processPath = function processPath(path) {
       var matchStart = matchInfo.index;
 
       if (value === undefined) {
-        throw new Error("Could not process path replacement for '".concat(key, "'; no such environment parameter found."));
+        throw new Error("No such environment parameter '".concat(key, "' found in path replacement: '").concat(origPath, "'."));
       }
 
       path = path.substring(0, matchStart) + value + path.substring(matchStart + match.length);
