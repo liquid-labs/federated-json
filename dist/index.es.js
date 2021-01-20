@@ -300,7 +300,11 @@ var processMountSpec = function processMountSpec(mntSpec, data) {
     mountPoint: mountPoint,
     finalKey: finalKey
   };
-};
+}; // aliases for 'import * as fjson; fjson.write()' style
 
-export { FJSON_META_DATA_KEY, addMountPoint, readFJSON, setSource, writeFJSON };
+
+var write = writeFJSON;
+var read = readFJSON;
+
+export { FJSON_META_DATA_KEY, addMountPoint, read, readFJSON, setSource, write, writeFJSON };
 //# sourceMappingURL=index.es.js.map

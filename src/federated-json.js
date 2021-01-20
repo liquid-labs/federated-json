@@ -145,4 +145,12 @@ const processMountSpec = (mntSpec, data) => {
   return { dataFile, mountPoint, finalKey }
 }
 
-export { addMountPoint, FJSON_META_DATA_KEY, readFJSON, setSource, writeFJSON }
+// aliases for 'import * as fjson; fjson.write()' style
+const write = writeFJSON
+const read = readFJSON
+
+export {
+  addMountPoint, readFJSON, setSource, writeFJSON, // standard interface
+  FJSON_META_DATA_KEY, // possibly useful? may be removed before '1.0'
+  write, read // aliases
+}
