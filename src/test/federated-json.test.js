@@ -1,4 +1,4 @@
-/* global afterEach beforeAll beforeEach describe expect test */
+/* global beforeAll beforeEach describe expect test */
 
 import * as fs from 'fs'
 
@@ -101,9 +101,9 @@ describe('readFJSON', () => {
     ${'baz.json/simple string'} | ${'./src/test/baz.json'} | ${expectedBaz}
     ${'root-object.json/complex object'} | ${'./src/test/root-object.json'} | ${expectedRootObject}
   `('loads $description', ({ file, expected }) => {
-    const data = readFJSON(file)
-    expect(data).toEqual(expected)
-  })
+  const data = readFJSON(file)
+  expect(data).toEqual(expected)
+})
 
   test('can remember the source', () => {
     const data = readFJSON(EMPTY_OBJ_SRC, { rememberSource : true })
@@ -112,14 +112,14 @@ describe('readFJSON', () => {
 
   test('throws useful error when file not found (no path replacement)', () => {
     const badFileName = '/foo/bar/non-existent-file.json'
-    expect(() => { readFJSON(badFileName)}).toThrow(new RegExp(badFileName))
+    expect(() => { readFJSON(badFileName) }).toThrow(new RegExp(badFileName))
   })
 
   test('throws useful error when file not found (with path replacement)', () => {
     const badFileBaseName = 'non-existent-file.json'
     const badFileName = `\${HOME}/${badFileBaseName}`
     const processedFileName = `${process.env.HOME}/${badFileBaseName}`
-    expect(() => { readFJSON(badFileName)}).toThrow(new RegExp(`\\${badFileName}.*\\('${processedFileName}'\\)`))
+    expect(() => { readFJSON(badFileName) }).toThrow(new RegExp(`\\${badFileName}.*\\('${processedFileName}'\\)`))
   })
 })
 
