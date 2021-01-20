@@ -2,7 +2,7 @@
 
 import * as fs from 'fs'
 
-import { addMountPoint, FJSON_DATA_SPACE_KEY, readFJSON, setSource, writeFJSON } from '../federated-json'
+import { addMountPoint, FJSON_META_DATA_KEY, readFJSON, setSource, writeFJSON } from '../federated-json'
 
 // test constants
 const testDir = '/tmp/federated-json.test'
@@ -11,7 +11,7 @@ const expectedBaz = 'just a string'
 
 const expectedRootObject = {
   _meta : {
-    [FJSON_DATA_SPACE_KEY] : {
+    [FJSON_META_DATA_KEY] : {
       mountSpecs : [ // eslint-disable-next-line no-template-curly-in-string
         { dataPath : 'foo/bar', dataFile : '${TEST_DIR}/foo-bar.json' }
       ]
@@ -20,7 +20,7 @@ const expectedRootObject = {
   foo : {
     bar : {
       _meta : {
-        [FJSON_DATA_SPACE_KEY] : {
+        [FJSON_META_DATA_KEY] : {
           mountSpecs : [ // eslint-disable-next-line no-template-curly-in-string
             { dataPath : 'baz', dataFile : '${TEST_DIR}/baz.json' }
           ]
@@ -46,14 +46,14 @@ describe('addMountPoint', () => {
   test('sets initial root mount points', () => {
     addMountPoint(data, 'foo', './some-file.json')
     expect(data._meta).toEqual({
-      [FJSON_DATA_SPACE_KEY] : { mountSpecs : [{ dataPath : 'foo', dataFile : './some-file.json' }] }
+      [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : 'foo', dataFile : './some-file.json' }] }
     })
   })
 
   test('sets initial root mount points', () => {
     addMountPoint(data, 'foo', './some-file.json')
     expect(data._meta).toEqual({
-      [FJSON_DATA_SPACE_KEY] : { mountSpecs : [{ dataPath : 'foo', dataFile : './some-file.json' }] }
+      [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : 'foo', dataFile : './some-file.json' }] }
     })
   })
 
@@ -61,23 +61,23 @@ describe('addMountPoint', () => {
     addMountPoint(data, 'foo', './some-file.json')
     addMountPoint(data, 'foo', './another-file.json')
     expect(data._meta).toEqual({
-      [FJSON_DATA_SPACE_KEY] : { mountSpecs : [{ dataPath : 'foo', dataFile : './another-file.json' }] }
+      [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : 'foo', dataFile : './another-file.json' }] }
     })
   })
 
   test('plays nice with setSource', () => {
     const metaModel = {
-      [FJSON_DATA_SPACE_KEY] : { sourceFile : './our-file.json' }
+      [FJSON_META_DATA_KEY] : { sourceFile : './our-file.json' }
     }
     setSource(data, './our-file.json')
     expect(data._meta).toEqual(metaModel)
 
     addMountPoint(data, 'foo', './some-file.json')
-    metaModel[FJSON_DATA_SPACE_KEY].mountSpecs = [{ dataPath : 'foo', dataFile : './some-file.json' }]
+    metaModel[FJSON_META_DATA_KEY].mountSpecs = [{ dataPath : 'foo', dataFile : './some-file.json' }]
     expect(data._meta).toEqual(metaModel)
 
     addMountPoint(data, 'foo', './another-file.json')
-    metaModel[FJSON_DATA_SPACE_KEY].mountSpecs = [{ dataPath : 'foo', dataFile : './another-file.json' }]
+    metaModel[FJSON_META_DATA_KEY].mountSpecs = [{ dataPath : 'foo', dataFile : './another-file.json' }]
     expect(data._meta).toEqual(metaModel)
   })
 
@@ -86,10 +86,10 @@ describe('addMountPoint', () => {
     addMountPoint(data, 'foo', './some-file.json')
     addMountPoint(data, 'foo/bar', './another-file.json')
     expect(data._meta).toEqual({
-      [FJSON_DATA_SPACE_KEY]: { "mountSpecs": [{ "dataPath": "foo", "dataFile": "./some-file.json"}] }
+      [FJSON_META_DATA_KEY]: { "mountSpecs": [{ "dataPath": "foo", "dataFile": "./some-file.json"}] }
     })
     expect(data.foo._meta).toEqual({
-      [FJSON_DATA_SPACE_KEY]: { "mountSpecs": [{ "dataPath": "bar", "dataFile": "./another-file.json"}] }
+      [FJSON_META_DATA_KEY]: { "mountSpecs": [{ "dataPath": "bar", "dataFile": "./another-file.json"}] }
     })
   }) */
 })
@@ -108,7 +108,7 @@ describe('readFJSON', () => {
 
   test('can remember the source', () => {
     const data = readFJSON(EMPTY_OBJ_SRC, { rememberSource : true })
-    expect(data).toEqual({ _meta : { [FJSON_DATA_SPACE_KEY] : { sourceFile : EMPTY_OBJ_SRC } } })
+    expect(data).toEqual({ _meta : { [FJSON_META_DATA_KEY] : { sourceFile : EMPTY_OBJ_SRC } } })
   })
 
   test('throws useful error when file not found (no path replacement)', () => {
@@ -143,7 +143,7 @@ describe('writeFJSON', () => {
     const barTestFile = `${testDir}/bar.json`
     const testEmbed = { bar : "I'm an embed!" }
     const testData = {
-      _meta : { [FJSON_DATA_SPACE_KEY] : { mountSpecs : [{ dataPath : 'foo', dataFile : barTestFile }] } },
+      _meta : { [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : 'foo', dataFile : barTestFile }] } },
       foo   : testEmbed
     }
     writeFJSON(testData, rootTestFile)

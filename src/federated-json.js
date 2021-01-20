@@ -9,7 +9,7 @@ import * as fs from 'fs'
 
 import { processPath } from './utils'
 
-const FJSON_DATA_SPACE_KEY = 'com.liquid-labs.federated-json'
+const FJSON_META_DATA_KEY = 'com.liquid-labs.federated-json'
 
 /**
 * Adds or updates a mount point entry. WARNING: This method does not currently support sub-mounts. These must be
@@ -106,13 +106,13 @@ const writeFJSON = (data, filePath) => {
   fs.writeFileSync(processedPath, dataString)
 }
 
-const getMyMeta = (data) => data._meta && data._meta[FJSON_DATA_SPACE_KEY]
+const getMyMeta = (data) => data._meta && data._meta[FJSON_META_DATA_KEY]
 
 const ensureMyMeta = (data) => {
   let myMeta = getMyMeta(data)
   if (!myMeta) {
     if (data._meta === undefined) { data._meta = {} }
-    if (data._meta[FJSON_DATA_SPACE_KEY] === undefined) { data._meta[FJSON_DATA_SPACE_KEY] = {} }
+    if (data._meta[FJSON_META_DATA_KEY] === undefined) { data._meta[FJSON_META_DATA_KEY] = {} }
     myMeta = getMyMeta(data)
   }
 
@@ -146,4 +146,4 @@ const processMountSpec = (mntSpec, data) => {
   return { dataFile, mountPoint, finalKey }
 }
 
-export { addMountPoint, FJSON_DATA_SPACE_KEY, readFJSON, setSource, writeFJSON }
+export { addMountPoint, FJSON_META_DATA_KEY, readFJSON, setSource, writeFJSON }

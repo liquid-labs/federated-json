@@ -99,7 +99,7 @@ function _createForOfIteratorHelper$1(o, allowArrayLike) { var it; if (typeof Sy
 function _unsupportedIterableToArray$2(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$2(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$2(o, minLen); }
 
 function _arrayLikeToArray$2(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-var FJSON_DATA_SPACE_KEY = 'com.liquid-labs.federated-json';
+var FJSON_META_DATA_KEY = 'com.liquid-labs.federated-json';
 /**
 * Adds or updates a mount point entry. WARNING: This method does not currently support sub-mounts. These must be
 * manually updated by accessing the sub-data structure and modifying it's mount points directly.
@@ -238,7 +238,7 @@ var writeFJSON = function writeFJSON(data, filePath) {
 };
 
 var getMyMeta = function getMyMeta(data) {
-  return data._meta && data._meta[FJSON_DATA_SPACE_KEY];
+  return data._meta && data._meta[FJSON_META_DATA_KEY];
 };
 
 var ensureMyMeta = function ensureMyMeta(data) {
@@ -249,8 +249,8 @@ var ensureMyMeta = function ensureMyMeta(data) {
       data._meta = {};
     }
 
-    if (data._meta[FJSON_DATA_SPACE_KEY] === undefined) {
-      data._meta[FJSON_DATA_SPACE_KEY] = {};
+    if (data._meta[FJSON_META_DATA_KEY] === undefined) {
+      data._meta[FJSON_META_DATA_KEY] = {};
     }
 
     myMeta = getMyMeta(data);
@@ -301,5 +301,5 @@ var processMountSpec = function processMountSpec(mntSpec, data) {
   };
 };
 
-export { FJSON_DATA_SPACE_KEY, addMountPoint, readFJSON, setSource, writeFJSON };
+export { FJSON_META_DATA_KEY, addMountPoint, readFJSON, setSource, writeFJSON };
 //# sourceMappingURL=index.es.js.map
