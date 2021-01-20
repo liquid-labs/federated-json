@@ -33,7 +33,5 @@
   "devDependencies": {
     "@liquid-labs/catalyst-scripts": "^1.0.0-alpha.32"
   },
-  "dependencies": {
-    "dotenv": "^8.2.0"
-  }
+  "dependencies": {}
 }

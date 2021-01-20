@@ -4,7 +4,6 @@
 * data path is split on '/' and each element is treated as a string. Therefore, the path is compatible with object keys
 * but does not support arrays.
 */
-import * as dotenv from 'dotenv'
 import * as fs from 'fs'
 
 import { processPath } from './utils'
