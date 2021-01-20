@@ -2,15 +2,18 @@
 
 import * as fs from 'fs'
 
-import { addMountPoint, FJSON_DATA_SPACE_KEY, processPath, readFJSON, setLiqPlayground, setSource, writeFJSON } from '../federated-json'
+import { addMountPoint, FJSON_DATA_SPACE_KEY, processPath, readFJSON, setSource, writeFJSON } from '../federated-json'
 
+// test constants
 const testDir = '/tmp/federated-json.test'
+
 const expectedBaz = 'just a string'
+
 const expectedRootObject = {
   _meta : {
     'com.liquid-labs.federated-json' : {
       mountSpecs : [ // eslint-disable-next-line no-template-curly-in-string
-        { dataPath : 'foo/bar', dataFile : '${LIQ_PLAYGROUND}/liquid-labs/federated-json/src/test/foo-bar.json' }
+        { dataPath : 'foo/bar', dataFile : '${TEST_DIR}/foo-bar.json' }
       ]
     }
   },
@@ -19,7 +22,7 @@ const expectedRootObject = {
       _meta : {
         'com.liquid-labs.federated-json' : {
           mountSpecs : [ // eslint-disable-next-line no-template-curly-in-string
-            { dataPath : 'baz', dataFile : '${LIQ_PLAYGROUND}/liquid-labs/federated-json/src/test/baz.json' }
+            { dataPath : 'baz', dataFile : '${TEST_DIR}/baz.json' }
           ]
         }
       },
@@ -32,29 +35,9 @@ const expectedRootObject = {
 }
 
 const EMPTY_OBJ_SRC = './src/test/empty-object.json'
-
-const LIQ_PLAYGROUND = process.env.LIQ_PLAYGROUND
-afterEach(() => { process.env.LIQ_PLAYGROUND = LIQ_PLAYGROUND })
-
-describe('setLiqPlayground', () => {
-  test('fails when \'~/.liq/setting.sh\' fails to load', () => {
-    process.env.HOME = '/'
-    delete process.env.LIQ_PLAYGROUND
-    expect(() => setLiqPlayground()).toThrow()
-  })
-
-  test('can manually set LIQ_PLAYGROUND', () => {
-    const testPath = '/some/path'
-    setLiqPlayground(testPath)
-    expect(process.env.LIQ_PLAYGROUND).toBe(testPath)
-  })
-
-  test('does not override LIQ_PLAYGROUND with default call', () => {
-    setLiqPlayground('blah')
-    setLiqPlayground()
-    expect(process.env.LIQ_PLAYGROUND).toBe('blah')
-  })
-})
+// end test constants
+// setup environment for test
+process.env.TEST_DIR = __dirname
 
 describe('readFJSON', () => {
   test.each`
@@ -63,6 +46,7 @@ describe('readFJSON', () => {
     ${'baz.json/simple string'} | ${'./src/test/baz.json'} | ${expectedBaz}
     ${'root-object.json/complex object'} | ${'./src/test/root-object.json'} | ${expectedRootObject}
   `('loads $description', ({ file, expected }) => {
+    console.log(fs.path)
     const data = readFJSON(file)
     expect(data).toEqual(expected)
   })
@@ -79,8 +63,8 @@ describe('readFJSON', () => {
 
   test('throws useful error when file not found (with path replacement)', () => {
     const badFileBaseName = 'non-existent-file.json'
-    const badFileName = `\${LIQ_PLAYGROUND}/${badFileBaseName}`
-    const processedFileName = `${process.env.LIQ_PLAYGROUND}/${badFileBaseName}`
+    const badFileName = `\${HOME}/${badFileBaseName}`
+    const processedFileName = `${process.env.HOME}/${badFileBaseName}`
     expect(() => { readFJSON(badFileName)}).toThrow(new RegExp(`\\${badFileName}.*\\('${processedFileName}'\\)`))
   })
 })
@@ -138,18 +122,6 @@ describe('addMountPoint', () => {
       [FJSON_DATA_SPACE_KEY]: { "mountSpecs": [{ "dataPath": "bar", "dataFile": "./another-file.json"}] }
     })
   }) */
-})
-
-describe('processPath', () => {
-  const testLiqPlayground = '/liq/playground'
-  beforeEach(() => setLiqPlayground(testLiqPlayground))
-  test.each`
-    path | expected
-    ${'/foo/bar/no-replacement.json'} | ${'/foo/bar/no-replacement.json'}
-    ${`\${LIQ_PLAYGROUND}/data.json`} | ${`${testLiqPlayground}/data.json`}
-    `('$path => $expected', ({ path, expected }) => {
-    expect(processPath(path)).toEqual(expected)
-  })
 })
 
 describe('writeFJSON', () => {

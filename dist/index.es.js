@@ -1,5 +1,5 @@
-import fs__default, { existsSync, readFileSync, writeFileSync } from 'fs';
-import path from 'path';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
+import 'path';
 
 function _arrayLikeToArray(arr, len) {
   if (len == null || len > arr.length) len = arr.length;
@@ -48,126 +48,20 @@ function _toConsumableArray(arr) {
 
 var toConsumableArray = _toConsumableArray;
 
-/* @flow */
-/*::
-
-type DotenvParseOptions = {
-  debug?: boolean
-}
-
-// keys and values from src
-type DotenvParseOutput = { [string]: string }
-
-type DotenvConfigOptions = {
-  path?: string, // path to .env file
-  encoding?: string, // encoding of .env file
-  debug?: string // turn on logging for debugging purposes
-}
-
-type DotenvConfigOutput = {
-  parsed?: DotenvParseOutput,
-  error?: Error
-}
-
-*/
-
-
-
-
-function log (message /*: string */) {
-  console.log(`[dotenv][DEBUG] ${message}`);
-}
-
-const NEWLINE = '\n';
-const RE_INI_KEY_VAL = /^\s*([\w.-]+)\s*=\s*(.*)?\s*$/;
-const RE_NEWLINES = /\\n/g;
-const NEWLINES_MATCH = /\n|\r|\r\n/;
-
-// Parses src into an Object
-function parse (src /*: string | Buffer */, options /*: ?DotenvParseOptions */) /*: DotenvParseOutput */ {
-  const debug = Boolean(options && options.debug);
-  const obj = {};
-
-  // convert Buffers before splitting into lines and processing
-  src.toString().split(NEWLINES_MATCH).forEach(function (line, idx) {
-    // matching "KEY' and 'VAL' in 'KEY=VAL'
-    const keyValueArr = line.match(RE_INI_KEY_VAL);
-    // matched?
-    if (keyValueArr != null) {
-      const key = keyValueArr[1];
-      // default undefined or missing values to empty string
-      let val = (keyValueArr[2] || '');
-      const end = val.length - 1;
-      const isDoubleQuoted = val[0] === '"' && val[end] === '"';
-      const isSingleQuoted = val[0] === "'" && val[end] === "'";
-
-      // if single or double quoted, remove quotes
-      if (isSingleQuoted || isDoubleQuoted) {
-        val = val.substring(1, end);
-
-        // if double quoted, expand newlines
-        if (isDoubleQuoted) {
-          val = val.replace(RE_NEWLINES, NEWLINE);
-        }
-      } else {
-        // remove surrounding whitespace
-        val = val.trim();
-      }
-
-      obj[key] = val;
-    } else if (debug) {
-      log(`did not match key and value when parsing line ${idx + 1}: ${line}`);
-    }
-  });
-
-  return obj
-}
-
-// Populates process.env from .env file
-function config (options /*: ?DotenvConfigOptions */) /*: DotenvConfigOutput */ {
-  let dotenvPath = path.resolve(process.cwd(), '.env');
-  let encoding /*: string */ = 'utf8';
-  let debug = false;
-
-  if (options) {
-    if (options.path != null) {
-      dotenvPath = options.path;
-    }
-    if (options.encoding != null) {
-      encoding = options.encoding;
-    }
-    if (options.debug != null) {
-      debug = true;
-    }
-  }
-
-  try {
-    // specifying an encoding returns a string instead of a buffer
-    const parsed = parse(fs__default.readFileSync(dotenvPath, { encoding }), { debug });
-
-    Object.keys(parsed).forEach(function (key) {
-      if (!Object.prototype.hasOwnProperty.call(process.env, key)) {
-        process.env[key] = parsed[key];
-      } else if (debug) {
-        log(`"${key}" is already defined in \`process.env\` and will not be overwritten`);
-      }
-    });
-
-    return { parsed }
-  } catch (e) {
-    return { error: e }
-  }
-}
-
-var config_1 = config;
-
 function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$1(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
 function _unsupportedIterableToArray$1(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$1(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$1(o, minLen); }
 
 function _arrayLikeToArray$1(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-var FJSON_DATA_SPACE_KEY = 'com.liquid-labs.federated-json';
+
+/**
+* Package internal utility functions.
+*/
 var replaceRE = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g;
+/**
+* Replaces constructs like '${FOO}' with the environment value of 'FOO' (or whatever key is used). Will raise an
+* exception if no value is found for a given key.
+*/
 
 var processPath = function processPath(path) {
   var matches = toConsumableArray(path.matchAll(replaceRE));
@@ -199,11 +93,17 @@ var processPath = function processPath(path) {
 
   return path;
 };
+
+function _createForOfIteratorHelper$1(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$2(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+
+function _unsupportedIterableToArray$2(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray$2(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray$2(o, minLen); }
+
+function _arrayLikeToArray$2(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+var FJSON_DATA_SPACE_KEY = 'com.liquid-labs.federated-json';
 /**
 * Adds or updates a mount point entry. WARNING: This method does not currently support sub-mounts. These must be
 * manually updated by accessing the sub-data structure and modifying it's mount points directly.
 */
-
 
 var addMountPoint = function addMountPoint(data, dataPath, dataFile) {
   var mountSpecs = getMountSpecs(data);
@@ -229,25 +129,6 @@ var addMountPoint = function addMountPoint(data, dataPath, dataFile) {
     mountSpecs[i] = mountSpec;
   } else {
     mountSpecs.push(mountSpec);
-  }
-};
-/**
-* Set the 'LIQ_PLAYGROUND' environment variable to the provided `path` or from the standard liq settings. Primarily
-* used for library setup and testing.
-*/
-
-
-var setLiqPlayground = function setLiqPlayground(path) {
-  if (path !== undefined) {
-    process.env.LIQ_PLAYGROUND = path;
-  } else if (!process.env.LIQ_PLAYGROUND) {
-    var envResult = config_1({
-      path: "".concat(process.env.HOME, "/.liq/settings.sh")
-    });
-
-    if (envResult.error) {
-      throw envResult.error;
-    }
   }
 };
 /**
@@ -277,12 +158,12 @@ var readFJSON = function readFJSON(filePath, options) {
   var mountSpecs = getMountSpecs(data);
 
   if (mountSpecs) {
-    var _iterator2 = _createForOfIteratorHelper(mountSpecs),
-        _step2;
+    var _iterator = _createForOfIteratorHelper$1(mountSpecs),
+        _step;
 
     try {
-      for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-        var mntSpec = _step2.value;
+      for (_iterator.s(); !(_step = _iterator.n()).done;) {
+        var mntSpec = _step.value;
 
         var _processMountSpec = processMountSpec(mntSpec, data),
             dataFile = _processMountSpec.dataFile,
@@ -293,9 +174,9 @@ var readFJSON = function readFJSON(filePath, options) {
         mountPoint[finalKey] = subData;
       }
     } catch (err) {
-      _iterator2.e(err);
+      _iterator.e(err);
     } finally {
-      _iterator2.f();
+      _iterator.f();
     }
   }
 
@@ -329,12 +210,12 @@ var writeFJSON = function writeFJSON(data, filePath) {
   var mountSpecs = getMountSpecs(data);
 
   if (mountSpecs) {
-    var _iterator3 = _createForOfIteratorHelper(mountSpecs),
-        _step3;
+    var _iterator2 = _createForOfIteratorHelper$1(mountSpecs),
+        _step2;
 
     try {
-      for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-        var mntSpec = _step3.value;
+      for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+        var mntSpec = _step2.value;
 
         var _processMountSpec2 = processMountSpec(mntSpec, data),
             mountPoint = _processMountSpec2.mountPoint,
@@ -345,9 +226,9 @@ var writeFJSON = function writeFJSON(data, filePath) {
         writeFJSON(subData, mntSpec.dataFile);
       }
     } catch (err) {
-      _iterator3.e(err);
+      _iterator2.e(err);
     } finally {
-      _iterator3.f();
+      _iterator2.f();
     }
   }
 
@@ -399,18 +280,18 @@ var processMountSpec = function processMountSpec(mntSpec, data) {
   var finalKey = pathTrail.pop();
   var mountPoint = data;
 
-  var _iterator4 = _createForOfIteratorHelper(pathTrail),
-      _step4;
+  var _iterator3 = _createForOfIteratorHelper$1(pathTrail),
+      _step3;
 
   try {
-    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-      var key = _step4.value;
+    for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+      var key = _step3.value;
       mountPoint = mountPoint[key];
     }
   } catch (err) {
-    _iterator4.e(err);
+    _iterator3.e(err);
   } finally {
-    _iterator4.f();
+    _iterator3.f();
   }
 
   return {
@@ -420,7 +301,5 @@ var processMountSpec = function processMountSpec(mntSpec, data) {
   };
 };
 
-setLiqPlayground();
-
-export { FJSON_DATA_SPACE_KEY, addMountPoint, processPath, readFJSON, setLiqPlayground, setSource, writeFJSON };
+export { FJSON_DATA_SPACE_KEY, addMountPoint, readFJSON, setSource, writeFJSON };
 //# sourceMappingURL=index.es.js.map

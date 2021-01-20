@@ -7,26 +7,9 @@
 import * as dotenv from 'dotenv'
 import * as fs from 'fs'
 
+import { processPath } from './utils'
+
 const FJSON_DATA_SPACE_KEY = 'com.liquid-labs.federated-json'
-
-const replaceRE = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g
-
-const processPath = (path) => {
-  const matches = [...path.matchAll(replaceRE)]
-  matches.reverse() // The reverse allows us to use the start and end indexes without messing up the string.
-  for (const matchInfo of matches) {
-    const match = matchInfo[0]
-    const key = matchInfo[1]
-    const value = process.env[key]
-    const matchStart = matchInfo.index
-    if (value === undefined) {
-      throw new Error(`Could not process path replacement for '${key}'; no such environment parameter found.`)
-    }
-    path = path.substring(0, matchStart) + value + path.substring(matchStart + match.length)
-  }
-
-  return path
-}
 
 /**
 * Adds or updates a mount point entry. WARNING: This method does not currently support sub-mounts. These must be
@@ -50,22 +33,6 @@ const addMountPoint = (data, dataPath, dataFile) => {
   }
   else {
     mountSpecs.push(mountSpec)
-  }
-}
-
-/**
-* Set the 'LIQ_PLAYGROUND' environment variable to the provided `path` or from the standard liq settings. Primarily
-* used for library setup and testing.
-*/
-const setLiqPlayground = (path) => {
-  if (path !== undefined) {
-    process.env.LIQ_PLAYGROUND = path
-  }
-  else if (!process.env.LIQ_PLAYGROUND) {
-    const envResult = dotenv.config({ path : `${process.env.HOME}/.liq/settings.sh` })
-    if (envResult.error) {
-      throw envResult.error
-    }
   }
 }
 
@@ -179,6 +146,4 @@ const processMountSpec = (mntSpec, data) => {
   return { dataFile, mountPoint, finalKey }
 }
 
-setLiqPlayground()
-
-export { addMountPoint, FJSON_DATA_SPACE_KEY, processPath, readFJSON, setLiqPlayground, setSource, writeFJSON }
+export { addMountPoint, FJSON_DATA_SPACE_KEY, readFJSON, setSource, writeFJSON }
