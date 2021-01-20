@@ -8,9 +8,10 @@
     "lint": "JS_SRC=src catalyst-scripts lint",
     "lint-fix": "JS_SRC=src catalyst-scripts lint-fix",
     "build": "JS_SRC=src catalyst-scripts build",
-    "prepare": "JS_SRC=src npm run lint && npm run build",
+    "prepare": "npm run build",
     "pretest": "JS_SRC=src catalyst-scripts pretest && cp src/test/*.json test-staging/test",
     "test": "JS_SRC=src catalyst-scripts test",
+    "preversion": "JS_SRC=src npm run lint && npm test",
     "postversion": "git push && git push --tags"
   },
   "files": [
