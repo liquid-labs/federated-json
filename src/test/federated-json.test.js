@@ -2,7 +2,7 @@
 
 import * as fs from 'fs'
 
-import { addMountPoint, FJSON_DATA_SPACE_KEY, processPath, readFJSON, setSource, writeFJSON } from '../federated-json'
+import { addMountPoint, FJSON_DATA_SPACE_KEY, readFJSON, setSource, writeFJSON } from '../federated-json'
 
 // test constants
 const testDir = '/tmp/federated-json.test'
@@ -38,36 +38,6 @@ const EMPTY_OBJ_SRC = './src/test/empty-object.json'
 // end test constants
 // setup environment for test
 process.env.TEST_DIR = __dirname
-
-describe('readFJSON', () => {
-  test.each`
-    description | file | expected
-    ${'empty-object.json/trivial object'} | ${EMPTY_OBJ_SRC} | ${{}}
-    ${'baz.json/simple string'} | ${'./src/test/baz.json'} | ${expectedBaz}
-    ${'root-object.json/complex object'} | ${'./src/test/root-object.json'} | ${expectedRootObject}
-  `('loads $description', ({ file, expected }) => {
-    console.log(fs.path)
-    const data = readFJSON(file)
-    expect(data).toEqual(expected)
-  })
-
-  test('can remember the source', () => {
-    const data = readFJSON(EMPTY_OBJ_SRC, { rememberSource : true })
-    expect(data).toEqual({ _meta : { [FJSON_DATA_SPACE_KEY] : { sourceFile : EMPTY_OBJ_SRC } } })
-  })
-
-  test('throws useful error when file not found (no path replacement)', () => {
-    const badFileName = '/foo/bar/non-existent-file.json'
-    expect(() => { readFJSON(badFileName)}).toThrow(new RegExp(badFileName))
-  })
-
-  test('throws useful error when file not found (with path replacement)', () => {
-    const badFileBaseName = 'non-existent-file.json'
-    const badFileName = `\${HOME}/${badFileBaseName}`
-    const processedFileName = `${process.env.HOME}/${badFileBaseName}`
-    expect(() => { readFJSON(badFileName)}).toThrow(new RegExp(`\\${badFileName}.*\\('${processedFileName}'\\)`))
-  })
-})
 
 describe('addMountPoint', () => {
   let data
@@ -122,6 +92,36 @@ describe('addMountPoint', () => {
       [FJSON_DATA_SPACE_KEY]: { "mountSpecs": [{ "dataPath": "bar", "dataFile": "./another-file.json"}] }
     })
   }) */
+})
+
+describe('readFJSON', () => {
+  test.each`
+    description | file | expected
+    ${'empty-object.json/trivial object'} | ${EMPTY_OBJ_SRC} | ${{}}
+    ${'baz.json/simple string'} | ${'./src/test/baz.json'} | ${expectedBaz}
+    ${'root-object.json/complex object'} | ${'./src/test/root-object.json'} | ${expectedRootObject}
+  `('loads $description', ({ file, expected }) => {
+    console.log(fs.path)
+    const data = readFJSON(file)
+    expect(data).toEqual(expected)
+  })
+
+  test('can remember the source', () => {
+    const data = readFJSON(EMPTY_OBJ_SRC, { rememberSource : true })
+    expect(data).toEqual({ _meta : { [FJSON_DATA_SPACE_KEY] : { sourceFile : EMPTY_OBJ_SRC } } })
+  })
+
+  test('throws useful error when file not found (no path replacement)', () => {
+    const badFileName = '/foo/bar/non-existent-file.json'
+    expect(() => { readFJSON(badFileName)}).toThrow(new RegExp(badFileName))
+  })
+
+  test('throws useful error when file not found (with path replacement)', () => {
+    const badFileBaseName = 'non-existent-file.json'
+    const badFileName = `\${HOME}/${badFileBaseName}`
+    const processedFileName = `${process.env.HOME}/${badFileBaseName}`
+    expect(() => { readFJSON(badFileName)}).toThrow(new RegExp(`\\${badFileName}.*\\('${processedFileName}'\\)`))
+  })
 })
 
 describe('writeFJSON', () => {
