@@ -5,12 +5,12 @@
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "scripts": {
-    "lint": "JS_SRC=src catalyst-scripts lint",
-    "lint-fix": "JS_SRC=src catalyst-scripts lint-fix",
-    "build": "JS_SRC=src catalyst-scripts build && cp src/fjson.sh dist/ && chmod a+x dist/fjson.sh",
+    "lint": "JS_SRC=src/lib catalyst-scripts lint",
+    "lint-fix": "JS_SRC=src/lib catalyst-scripts lint-fix",
+    "build": "JS_SRC=src/lib catalyst-scripts build && cp src/bin/fjson.sh dist/ && chmod a+x dist/fjson.sh",
     "prepare": "npm run build",
-    "pretest": "JS_SRC=src catalyst-scripts pretest && cp src/test/*.json test-staging/test",
-    "test": "JS_SRC=src catalyst-scripts test",
+    "pretest": "JS_SRC=src/lib catalyst-scripts pretest && cp src/lib/test/*.json test-staging/test",
+    "test": "JS_SRC=src/lib catalyst-scripts test",
     "preversion": "JS_SRC=src npm run lint && npm test",
     "postversion": "git push && git push --tags"
   },
