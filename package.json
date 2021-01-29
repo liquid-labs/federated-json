@@ -7,7 +7,7 @@
   "scripts": {
     "lint": "JS_SRC=src/lib catalyst-scripts lint",
     "lint-fix": "JS_SRC=src/lib catalyst-scripts lint-fix",
-    "build": "JS_SRC=src/lib catalyst-scripts build && cp src/bin/fjson.sh dist/ && chmod a+x dist/fjson.sh",
+    "build": "JS_SRC=src/lib catalyst-scripts build && rollup-bash src/bin/fjson.sh dist/fjson.sh",
     "prepare": "npm run build",
     "pretest": "JS_SRC=src/lib catalyst-scripts pretest && cp src/lib/test/*.json test-staging/test",
     "test": "JS_SRC=src/lib catalyst-scripts test",
@@ -35,6 +35,7 @@
     "orgBase": "git@github.com:Liquid-Labs/Liquid-Labs.git"
   },
   "devDependencies": {
+    "@liquid-labs/bash-toolkit": "^1.0.0-alpha.42",
     "@liquid-labs/catalyst-scripts": "^1.0.0-alpha.32"
   },
   "dependencies": {}
