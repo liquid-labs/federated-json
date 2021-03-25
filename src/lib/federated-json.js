@@ -151,13 +151,7 @@ const processMountSpec = (mntSpec, data) => {
 
   dataFile = envTemplateString(dataFile)
 
-  const pathTrail = dataPath.split('/')
-  const finalKey = pathTrail.pop()
-
-  let mountPoint = data
-  for (const key of pathTrail) {
-    mountPoint = mountPoint[key]
-  }
+  const { penultimateRef: mountPoint, finalKey } = processJSONPath(dataPath, data)
 
   return { dataFile, mountPoint, finalKey }
 }
@@ -171,19 +165,29 @@ const getLinkSpecs = (data) => getMyMeta(data)?.linkSpecs
 * Internal function to process a link spec into useful components utilized by the `readFJSON` and `writeFJSON`.
 */
 const processLinkSpec = (lnkSpec, data) => {
-  let { linkFrom, linkTo, linkKey } = lnkSpec
+  let { linkRefs, linkTo, linkKey: keyName } = lnkSpec
 
-  dataFile = envTemplateString(dataFile)
+  const { finalRef, penultimateRef, finalKey } = processJSONPath(linkRefs, data)
+  const { finalRef: source } = processJSONPath(linkTo, data)
 
-  const pathTrail = dataPath.split('/')
+  return { finalRef, source, keyName, penultimateRef, finalKey }
+}
+
+const processJSONPath = (path, data) => {
+  const pathTrail = path.split('/')
   const finalKey = pathTrail.pop()
+  finalKey !== undefined || throw new Exception('Path must specify at least one key.')
 
-  let mountPoint = data
+  let penultimateRef = data // not necessarily penultimate yet, but will be...
   for (const key of pathTrail) {
-    mountPoint = mountPoint[key]
+    penultimateRef = penultimateRef[key]
   }
 
-  return { dataFile, mountPoint, finalKey }
+  return {
+    finalRef: penultimateRef[finalKey],
+    penultimateRef,
+    finalKey
+  }
 }
 
 // aliases for 'import * as fjson; fjson.write()' style
