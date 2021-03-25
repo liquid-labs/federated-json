@@ -398,7 +398,7 @@ var processJSONPath = function processJSONPath(path, data) {
   var pathTrail = path.split('/');
   var finalKey = pathTrail.pop();
 
-  if (finalKey !== undefined) {
+  if (finalKey === undefined) {
     throw new Error('Path must specify at least one key.');
   }
 
