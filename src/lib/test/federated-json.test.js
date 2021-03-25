@@ -36,7 +36,7 @@ const expectedRootObject = {
 
 const linkyBarRef = { "name": "bar" }
 const linkyBazRef = { "name": "baz", "value": true }
-const expectedLinkyObject = {
+const linkyBase = {
   "_meta": {
     "com.liquid-labs.federated-json": {
       "linkSpecs": [
@@ -44,9 +44,11 @@ const expectedLinkyObject = {
       ]
     }
   },
-  "foo": [ linkyBarRef, linkyBazRef ],
   "source": [ linkyBarRef, linkyBazRef ]
 }
+const expectedArr2Arr = Object.assign({ "foo": [ linkyBarRef, linkyBazRef ] }, linkyBase)
+const expectedObj2Arr = Object.assign({ "foo": { "bar": linkyBarRef, "baz": linkyBazRef } }, linkyBase)
+const expectedStr2Arr = Object.assign({ "foo": linkyBarRef }, linkyBase)
 
 const EMPTY_OBJ_SRC = './src/lib/test/data/empty-object.json'
 // end test constants
@@ -114,7 +116,9 @@ describe('readFJSON', () => {
       ${'empty-object.json/trivial object'} | ${EMPTY_OBJ_SRC} | ${{}}
       ${'baz.json/simple string'} | ${'./src/lib/test/data/baz.json'} | ${expectedBaz}
       ${'root-object.json/federated object'} | ${'./src/lib/test/data/root-object.json'} | ${expectedRootObject}
-      ${'link-arr2arr.json/intra-linked object'} | ${'./src/lib/test/data/link-arr2arr.json'} | ${expectedLinkyObject}
+      ${'link-arr2arr.json/intra-linked object'} | ${'./src/lib/test/data/link-arr2arr.json'} | ${expectedArr2Arr}
+      ${'link-obj2arr.json/intra-linked object'} | ${'./src/lib/test/data/link-obj2arr.json'} | ${expectedObj2Arr}
+      ${'link-str2arr.json/intra-linked object'} | ${'./src/lib/test/data/link-str2arr.json'} | ${expectedStr2Arr}
     `('loads $description', ({ file, expected }) => {
     const data = readFJSON(file)
     expect(data).toEqual(expected)

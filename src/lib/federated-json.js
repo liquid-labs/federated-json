@@ -74,7 +74,7 @@ const readFJSON = (filePath, options) => {
     }
     else if (typeof finalRef === 'object'){
       for (const key of Object.keys(finalRef)) {
-        refContianer[key] = getRealItem(source, keyName, key)
+        finalRef[key] = getRealItem(source, keyName, key)
       }
     }
     else { // it's a single key
