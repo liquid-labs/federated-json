@@ -13,7 +13,7 @@ const expectedRootObject = {
   _meta : {
     [FJSON_META_DATA_KEY] : {
       mountSpecs : [ // eslint-disable-next-line no-template-curly-in-string
-        { dataPath : 'foo/bar', dataFile : '${TEST_DIR}/foo-bar.json' }
+        { dataPath : 'foo/bar', dataFile : '${TEST_DIR}/data/foo-bar.json' }
       ]
     }
   },
@@ -22,7 +22,7 @@ const expectedRootObject = {
       _meta : {
         [FJSON_META_DATA_KEY] : {
           mountSpecs : [ // eslint-disable-next-line no-template-curly-in-string
-            { dataPath : 'baz', dataFile : '${TEST_DIR}/baz.json' }
+            { dataPath : 'baz', dataFile : '${TEST_DIR}/data/baz.json' }
           ]
         }
       },
@@ -34,7 +34,7 @@ const expectedRootObject = {
   'other-data' : 123
 }
 
-const EMPTY_OBJ_SRC = './src/lib/test/empty-object.json'
+const EMPTY_OBJ_SRC = './src/lib/test/data/empty-object.json'
 // end test constants
 // setup environment for test
 process.env.TEST_DIR = __dirname
@@ -98,8 +98,8 @@ describe('readFJSON', () => {
   test.each`
     description | file | expected
     ${'empty-object.json/trivial object'} | ${EMPTY_OBJ_SRC} | ${{}}
-    ${'baz.json/simple string'} | ${'./src/lib/test/baz.json'} | ${expectedBaz}
-    ${'root-object.json/complex object'} | ${'./src/lib/test/root-object.json'} | ${expectedRootObject}
+    ${'baz.json/simple string'} | ${'./src/lib/test/data/baz.json'} | ${expectedBaz}
+    ${'root-object.json/complex object'} | ${'./src/lib/test/data/root-object.json'} | ${expectedRootObject}
   `('loads $description', ({ file, expected }) => {
   const data = readFJSON(file)
   expect(data).toEqual(expected)
