@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "com.liquid-labs.federated-json": {
+      "mountSpecs": [
+        { "dataPath": "source", "dataFile": "${TEST_DIR}/data/fed-link-source.json" }
+      ],
+      "linkSpecs": [
+        { "linkRefs": "foo", "linkTo": "source", "linkKey": "name" }
+      ]
+    }
+  },
+  "foo": [ "bar", "baz" ],
+  "source": null
+}

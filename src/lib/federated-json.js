@@ -6,7 +6,7 @@
 */
 import * as fs from 'fs'
 
-import { processPath } from './utils'
+import { envTemplateString } from './utils'
 
 const FJSON_META_DATA_KEY = 'com.liquid-labs.federated-json'
 
@@ -42,7 +42,7 @@ const addMountPoint = (data, dataPath, dataFile) => {
 const readFJSON = (filePath, options) => {
   const { rememberSource } = options || {}
 
-  const processedPath = processPath(filePath)
+  const processedPath = envTemplateString(filePath)
   if (!fs.existsSync(processedPath)) {
     const msg = `No such file: '${filePath}'` + (filePath !== processedPath ? ` ('${processedPath}')` : '')
     throw new Error(msg)
@@ -54,13 +54,31 @@ const readFJSON = (filePath, options) => {
     setSource(data, filePath)
   }
 
-  const mountSpecs = getMountSpecs(data)
-  if (mountSpecs) {
-    for (const mntSpec of mountSpecs) {
-      const { dataFile, mountPoint, finalKey } = processMountSpec(mntSpec, data)
-      const subData = readFJSON(dataFile)
+  for (const mntSpec of getMountSpecs(data) || []) {
+    const { dataFile, mountPoint, finalKey } = processMountSpec(mntSpec, data)
+    const subData = readFJSON(dataFile)
 
-      mountPoint[finalKey] = subData
+    mountPoint[finalKey] = subData
+  }
+
+  for (const lnkSpec of getLinkSpecs(data) || []) {
+    const { finalRef, source, keyName, penultimateRef, finalKey } = processLinkSpec(lnkSpec, data)
+
+    const getRealItem = (soure, keyName, key) =>
+      source.find((candidate) => candidate[keyName] === key)
+        || throw new Error(`Cannot find link '${key}' in '${lnkSpec.linkTo}'.`)
+
+    if (Array.isArray(finalRef)) { // replace the contents
+      const realItems = finalRef.map((key) => getRealItem(source, keyName, key))
+      finalRef.splice(0, finalRef.length, ...realItems)
+    }
+    else if (typeof finalRef === 'object') {
+      for (const key of Object.keys(finalRef)) {
+        finalRef[key] = getRealItem(source, keyName, key)
+      }
+    }
+    else { // it's a single key
+      penultimateRef[finalKey] = getRealItem(source, keyName, finalRef)
     }
   }
 
@@ -101,7 +119,7 @@ const writeFJSON = (data, filePath) => {
   }
 
   const dataString = JSON.stringify(data)
-  const processedPath = processPath(filePath)
+  const processedPath = envTemplateString(filePath)
   fs.writeFileSync(processedPath, dataString)
 }
 
@@ -121,10 +139,7 @@ const ensureMyMeta = (data) => {
 /**
 * Internal function to test for and extract mount specs from the provided JSON object.
 */
-const getMountSpecs = (data) => {
-  const myMeta = getMyMeta(data)
-  return myMeta && myMeta.mountSpecs
-}
+const getMountSpecs = (data) => getMyMeta(data)?.mountSpecs
 
 /**
 * Internal function to process a mount spec into useful components utilized by the `readFJSON` and `writeFJSON`.
@@ -132,17 +147,47 @@ const getMountSpecs = (data) => {
 const processMountSpec = (mntSpec, data) => {
   let { dataPath, dataFile } = mntSpec
 
-  dataFile = processPath(dataFile)
+  dataFile = envTemplateString(dataFile)
 
-  const pathTrail = dataPath.split('/')
-  const finalKey = pathTrail.pop()
-
-  let mountPoint = data
-  for (const key of pathTrail) {
-    mountPoint = mountPoint[key]
-  }
+  const { penultimateRef: mountPoint, finalKey } = processJSONPath(dataPath, data)
 
   return { dataFile, mountPoint, finalKey }
+}
+
+/**
+* Internal function to test for and extract link specs from the provided JSON object.
+*/
+const getLinkSpecs = (data) => getMyMeta(data)?.linkSpecs
+
+/**
+* Internal function to process a link spec into useful components utilized by the `readFJSON` and `writeFJSON`.
+*/
+const processLinkSpec = (lnkSpec, data) => {
+  const { linkRefs, linkTo, linkKey: keyName } = lnkSpec
+
+  const { finalRef, penultimateRef, finalKey } = processJSONPath(linkRefs, data)
+  const { finalRef: source } = processJSONPath(linkTo, data)
+
+  return { finalRef, source, keyName, penultimateRef, finalKey }
+}
+
+const processJSONPath = (path, data) => {
+  const pathTrail = path.split('/')
+  const finalKey = pathTrail.pop()
+  if (finalKey !== undefined) {
+    throw new Error('Path must specify at least one key.')
+  }
+
+  let penultimateRef = data // not necessarily penultimate yet, but will be...
+  for (const key of pathTrail) {
+    penultimateRef = penultimateRef[key]
+  }
+
+  return {
+    finalRef : penultimateRef[finalKey],
+    penultimateRef,
+    finalKey
+  }
 }
 
 // aliases for 'import * as fjson; fjson.write()' style

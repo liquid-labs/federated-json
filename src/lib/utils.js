@@ -7,7 +7,7 @@ const replaceRE = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g
 * Replaces constructs like '${FOO}' with the environment value of 'FOO' (or whatever key is used). Will raise an
 * exception if no value is found for a given key.
 */
-const processPath = (path) => {
+const envTemplateString = (path) => {
   const origPath = path // used for error messages
   const matches = [...path.matchAll(replaceRE)]
   matches.reverse() // The reverse allows us to use the start and end indexes without messing up the string.
@@ -25,4 +25,4 @@ const processPath = (path) => {
   return path
 }
 
-export { processPath }
+export { envTemplateString }
