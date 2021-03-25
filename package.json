@@ -36,7 +36,6 @@
   },
   "devDependencies": {
     "@liquid-labs/bash-toolkit": "^1.0.0-alpha.42",
-    "@liquid-labs/catalyst-scripts": "^1.0.0-alpha.32"
-  },
-  "dependencies": {}
+    "@liquid-labs/catalyst-scripts": "^1.0.0-alpha.33"
+  }
 }
