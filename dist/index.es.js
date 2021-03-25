@@ -1,5 +1,29 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 
+function createCommonjsModule(fn, module) {
+	return module = { exports: {} }, fn(module, module.exports), module.exports;
+}
+
+var _typeof_1 = createCommonjsModule(function (module) {
+function _typeof(obj) {
+  "@babel/helpers - typeof";
+
+  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+    module.exports = _typeof = function _typeof(obj) {
+      return typeof obj;
+    };
+  } else {
+    module.exports = _typeof = function _typeof(obj) {
+      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+    };
+  }
+
+  return _typeof(obj);
+}
+
+module.exports = _typeof;
+});
+
 function _arrayLikeToArray(arr, len) {
   if (len == null || len > arr.length) len = arr.length;
 
@@ -62,7 +86,7 @@ var replaceRE = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g;
 * exception if no value is found for a given key.
 */
 
-var processPath = function processPath(path) {
+var envTemplateString = function envTemplateString(path) {
   var origPath = path; // used for error messages
 
   var matches = toConsumableArray(path.matchAll(replaceRE));
@@ -142,7 +166,7 @@ var readFJSON = function readFJSON(filePath, options) {
   var _ref = options || {},
       rememberSource = _ref.rememberSource;
 
-  var processedPath = processPath(filePath);
+  var processedPath = envTemplateString(filePath);
 
   if (!existsSync(processedPath)) {
     var msg = "No such file: '".concat(filePath, "'") + (filePath !== processedPath ? " ('".concat(processedPath, "')") : '');
@@ -156,29 +180,73 @@ var readFJSON = function readFJSON(filePath, options) {
     setSource(data, filePath);
   }
 
-  var mountSpecs = getMountSpecs(data);
+  var _iterator = _createForOfIteratorHelper$1(getMountSpecs(data) || []),
+      _step;
 
-  if (mountSpecs) {
-    var _iterator = _createForOfIteratorHelper$1(mountSpecs),
-        _step;
+  try {
+    for (_iterator.s(); !(_step = _iterator.n()).done;) {
+      var mntSpec = _step.value;
 
-    try {
-      for (_iterator.s(); !(_step = _iterator.n()).done;) {
-        var mntSpec = _step.value;
+      var _processMountSpec = processMountSpec(mntSpec, data),
+          dataFile = _processMountSpec.dataFile,
+          mountPoint = _processMountSpec.mountPoint,
+          finalKey = _processMountSpec.finalKey;
 
-        var _processMountSpec = processMountSpec(mntSpec, data),
-            dataFile = _processMountSpec.dataFile,
-            mountPoint = _processMountSpec.mountPoint,
-            finalKey = _processMountSpec.finalKey;
-
-        var subData = readFJSON(dataFile);
-        mountPoint[finalKey] = subData;
-      }
-    } catch (err) {
-      _iterator.e(err);
-    } finally {
-      _iterator.f();
+      var subData = readFJSON(dataFile);
+      mountPoint[finalKey] = subData;
     }
+  } catch (err) {
+    _iterator.e(err);
+  } finally {
+    _iterator.f();
+  }
+
+  var _iterator2 = _createForOfIteratorHelper$1(getLinkSpecs(data) || []),
+      _step2;
+
+  try {
+    var _loop = function _loop() {
+      var lnkSpec = _step2.value;
+
+      var _processLinkSpec = processLinkSpec(lnkSpec, data),
+          refContainer = _processLinkSpec.refContainer,
+          source = _processLinkSpec.source,
+          keyName = _processLinkSpec.keyName,
+          penultimateContainer = _processLinkSpec.penultimateContainer,
+          finalKey = _processLinkSpec.finalKey;
+
+      var getRealItem = function getRealItem(soure, keyName, key) {
+        var realItem = source[keyName];
+        realItem !== undefined || function (e) {
+          throw e;
+        }(new Error("Cannot find link '".concat(key, "' in '").concat(lnk.linkTo, "'.")));
+        return realItem;
+      };
+
+      if (Array.isArray(refContainer)) {
+        // replace the contents
+        var realItems = refContainer.map(function (key) {
+          return getRealItem(source, keyName, key);
+        });
+        refContainer.splice.apply(refContainer, [0, refContainer.length].concat(toConsumableArray(realItems)));
+      } else if (_typeof_1(refContainer) === 'object') {
+        for (var _i = 0, _Object$keys = Object.keys(refContainer); _i < _Object$keys.length; _i++) {
+          var key = _Object$keys[_i];
+          refContianer[key] = getRealItem(source, keyName, key);
+        }
+      } else {
+        // it's a single key
+        penultimateContainer[finalKey] = getRealItem(source, keyName, refContainer);
+      }
+    };
+
+    for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+      _loop();
+    }
+  } catch (err) {
+    _iterator2.e(err);
+  } finally {
+    _iterator2.f();
   }
 
   return data;
@@ -211,12 +279,12 @@ var writeFJSON = function writeFJSON(data, filePath) {
   var mountSpecs = getMountSpecs(data);
 
   if (mountSpecs) {
-    var _iterator2 = _createForOfIteratorHelper$1(mountSpecs),
-        _step2;
+    var _iterator3 = _createForOfIteratorHelper$1(mountSpecs),
+        _step3;
 
     try {
-      for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-        var mntSpec = _step2.value;
+      for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+        var mntSpec = _step3.value;
 
         var _processMountSpec2 = processMountSpec(mntSpec, data),
             mountPoint = _processMountSpec2.mountPoint,
@@ -227,14 +295,14 @@ var writeFJSON = function writeFJSON(data, filePath) {
         writeFJSON(subData, mntSpec.dataFile);
       }
     } catch (err) {
-      _iterator2.e(err);
+      _iterator3.e(err);
     } finally {
-      _iterator2.f();
+      _iterator3.f();
     }
   }
 
   var dataString = JSON.stringify(data);
-  var processedPath = processPath(filePath);
+  var processedPath = envTemplateString(filePath);
   writeFileSync(processedPath, dataString);
 };
 
@@ -265,8 +333,9 @@ var ensureMyMeta = function ensureMyMeta(data) {
 
 
 var getMountSpecs = function getMountSpecs(data) {
-  var myMeta = getMyMeta(data);
-  return myMeta && myMeta.mountSpecs;
+  var _getMyMeta;
+
+  return (_getMyMeta = getMyMeta(data)) === null || _getMyMeta === void 0 ? void 0 : _getMyMeta.mountSpecs;
 };
 /**
 * Internal function to process a mount spec into useful components utilized by the `readFJSON` and `writeFJSON`.
@@ -276,23 +345,23 @@ var getMountSpecs = function getMountSpecs(data) {
 var processMountSpec = function processMountSpec(mntSpec, data) {
   var dataPath = mntSpec.dataPath,
       dataFile = mntSpec.dataFile;
-  dataFile = processPath(dataFile);
+  dataFile = envTemplateString(dataFile);
   var pathTrail = dataPath.split('/');
   var finalKey = pathTrail.pop();
   var mountPoint = data;
 
-  var _iterator3 = _createForOfIteratorHelper$1(pathTrail),
-      _step3;
+  var _iterator4 = _createForOfIteratorHelper$1(pathTrail),
+      _step4;
 
   try {
-    for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-      var key = _step3.value;
+    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+      var key = _step4.value;
       mountPoint = mountPoint[key];
     }
   } catch (err) {
-    _iterator3.e(err);
+    _iterator4.e(err);
   } finally {
-    _iterator3.f();
+    _iterator4.f();
   }
 
   return {
@@ -300,6 +369,16 @@ var processMountSpec = function processMountSpec(mntSpec, data) {
     mountPoint: mountPoint,
     finalKey: finalKey
   };
+};
+/**
+* Internal function to test for and extract link specs from the provided JSON object.
+*/
+
+
+var getLinkSpecs = function getLinkSpecs(data) {
+  var _getMyMeta2;
+
+  return (_getMyMeta2 = getMyMeta(data)) === null || _getMyMeta2 === void 0 ? void 0 : _getMyMeta2.linkSpecs;
 }; // aliases for 'import * as fjson; fjson.write()' style
 
 
