@@ -174,7 +174,7 @@ const processLinkSpec = (lnkSpec, data) => {
 const processJSONPath = (path, data) => {
   const pathTrail = path.split('/')
   const finalKey = pathTrail.pop()
-  if (finalKey !== undefined) {
+  if (finalKey === undefined) {
     throw new Error('Path must specify at least one key.')
   }
 
