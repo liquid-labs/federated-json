@@ -6,7 +6,7 @@
   "module": "dist/index.es.js",
   "scripts": {
     "lint": "JS_SRC=src/lib catalyst-scripts lint",
-    "lint-fix": "JS_SRC=src/lib catalyst-scripts lint-fix",
+    "lint:fix": "JS_SRC=src/lib catalyst-scripts lint-fix",
     "build": "JS_SRC=src/lib catalyst-scripts build && rollup-bash src/bin/fjson.sh dist/fjson.sh",
     "prepare": "npm run build",
     "pretest": "JS_SRC=src/lib catalyst-scripts pretest && mkdir -p test-staging/test/data && cp src/lib/test/data/*.json test-staging/test/data",
