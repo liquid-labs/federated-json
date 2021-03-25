@@ -209,34 +209,34 @@ var readFJSON = function readFJSON(filePath, options) {
       var lnkSpec = _step2.value;
 
       var _processLinkSpec = processLinkSpec(lnkSpec, data),
-          refContainer = _processLinkSpec.refContainer,
+          finalRef = _processLinkSpec.finalRef,
           source = _processLinkSpec.source,
           keyName = _processLinkSpec.keyName,
-          penultimateContainer = _processLinkSpec.penultimateContainer,
+          penultimateRef = _processLinkSpec.penultimateRef,
           finalKey = _processLinkSpec.finalKey;
 
       var getRealItem = function getRealItem(soure, keyName, key) {
-        var realItem = source[keyName];
-        realItem !== undefined || function (e) {
+        return source.find(function (candidate) {
+          return candidate[keyName] === key;
+        }) || function (e) {
           throw e;
-        }(new Error("Cannot find link '".concat(key, "' in '").concat(lnk.linkTo, "'.")));
-        return realItem;
+        }(new Error("Cannot find link '".concat(key, "' in '").concat(lnkSpec.linkTo, "'.")));
       };
 
-      if (Array.isArray(refContainer)) {
+      if (Array.isArray(finalRef)) {
         // replace the contents
-        var realItems = refContainer.map(function (key) {
+        var realItems = finalRef.map(function (key) {
           return getRealItem(source, keyName, key);
         });
-        refContainer.splice.apply(refContainer, [0, refContainer.length].concat(toConsumableArray(realItems)));
-      } else if (_typeof_1(refContainer) === 'object') {
-        for (var _i = 0, _Object$keys = Object.keys(refContainer); _i < _Object$keys.length; _i++) {
+        finalRef.splice.apply(finalRef, [0, finalRef.length].concat(toConsumableArray(realItems)));
+      } else if (_typeof_1(finalRef) === 'object') {
+        for (var _i = 0, _Object$keys = Object.keys(finalRef); _i < _Object$keys.length; _i++) {
           var key = _Object$keys[_i];
-          refContianer[key] = getRealItem(source, keyName, key);
+          finalRef[key] = getRealItem(source, keyName, key);
         }
       } else {
         // it's a single key
-        penultimateContainer[finalKey] = getRealItem(source, keyName, refContainer);
+        penultimateRef[finalKey] = getRealItem(source, keyName, finalRef);
       }
     };
 
@@ -346,23 +346,10 @@ var processMountSpec = function processMountSpec(mntSpec, data) {
   var dataPath = mntSpec.dataPath,
       dataFile = mntSpec.dataFile;
   dataFile = envTemplateString(dataFile);
-  var pathTrail = dataPath.split('/');
-  var finalKey = pathTrail.pop();
-  var mountPoint = data;
 
-  var _iterator4 = _createForOfIteratorHelper$1(pathTrail),
-      _step4;
-
-  try {
-    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-      var key = _step4.value;
-      mountPoint = mountPoint[key];
-    }
-  } catch (err) {
-    _iterator4.e(err);
-  } finally {
-    _iterator4.f();
-  }
+  var _processJSONPath = processJSONPath(dataPath, data),
+      mountPoint = _processJSONPath.penultimateRef,
+      finalKey = _processJSONPath.finalKey;
 
   return {
     dataFile: dataFile,
@@ -379,6 +366,63 @@ var getLinkSpecs = function getLinkSpecs(data) {
   var _getMyMeta2;
 
   return (_getMyMeta2 = getMyMeta(data)) === null || _getMyMeta2 === void 0 ? void 0 : _getMyMeta2.linkSpecs;
+};
+/**
+* Internal function to process a link spec into useful components utilized by the `readFJSON` and `writeFJSON`.
+*/
+
+
+var processLinkSpec = function processLinkSpec(lnkSpec, data) {
+  var linkRefs = lnkSpec.linkRefs,
+      linkTo = lnkSpec.linkTo,
+      keyName = lnkSpec.linkKey;
+
+  var _processJSONPath2 = processJSONPath(linkRefs, data),
+      finalRef = _processJSONPath2.finalRef,
+      penultimateRef = _processJSONPath2.penultimateRef,
+      finalKey = _processJSONPath2.finalKey;
+
+  var _processJSONPath3 = processJSONPath(linkTo, data),
+      source = _processJSONPath3.finalRef;
+
+  return {
+    finalRef: finalRef,
+    source: source,
+    keyName: keyName,
+    penultimateRef: penultimateRef,
+    finalKey: finalKey
+  };
+};
+
+var processJSONPath = function processJSONPath(path, data) {
+  var pathTrail = path.split('/');
+  var finalKey = pathTrail.pop();
+
+  if (finalKey !== undefined) {
+    throw new Error('Path must specify at least one key.');
+  }
+
+  var penultimateRef = data; // not necessarily penultimate yet, but will be...
+
+  var _iterator4 = _createForOfIteratorHelper$1(pathTrail),
+      _step4;
+
+  try {
+    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+      var key = _step4.value;
+      penultimateRef = penultimateRef[key];
+    }
+  } catch (err) {
+    _iterator4.e(err);
+  } finally {
+    _iterator4.f();
+  }
+
+  return {
+    finalRef: penultimateRef[finalKey],
+    penultimateRef: penultimateRef,
+    finalKey: finalKey
+  };
 }; // aliases for 'import * as fjson; fjson.write()' style
 
 
