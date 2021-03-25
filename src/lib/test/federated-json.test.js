@@ -38,7 +38,7 @@ const linkyBarRef = { "name": "bar" }
 const linkyBazRef = { "name": "baz", "value": true }
 const linkyBase = {
   "_meta": {
-    "com.liquid-labs.federated-json": {
+    [FJSON_META_DATA_KEY]: {
       "linkSpecs": [
         { "linkRefs": "foo", "linkTo": "source", "linkKey": "name" }
       ]
@@ -49,8 +49,17 @@ const linkyBase = {
 const expectedArr2Arr = Object.assign({ "foo": [ linkyBarRef, linkyBazRef ] }, linkyBase)
 const expectedObj2Arr = Object.assign({ "foo": { "bar": linkyBarRef, "baz": linkyBazRef } }, linkyBase)
 const expectedStr2Arr = Object.assign({ "foo": linkyBarRef }, linkyBase)
+const expectedFedLinkArr2Arr = Object.assign({}, expectedArr2Arr)
+expectedFedLinkArr2Arr._meta = Object.assign({}, expectedArr2Arr._meta)
+expectedFedLinkArr2Arr._meta[FJSON_META_DATA_KEY] = Object.assign({
+  "mountSpecs": [{
+    "dataFile": "${TEST_DIR}/data/fed-link-source.json",
+    "dataPath": "source"
+  }]},
+  expectedFedLinkArr2Arr._meta[FJSON_META_DATA_KEY])
 
-const EMPTY_OBJ_SRC = './src/lib/test/data/empty-object.json'
+const testDataPath = './src/lib/test/data'
+const EMPTY_OBJ_SRC = `${testDataPath}/empty-object.json`
 // end test constants
 // setup environment for test
 process.env.TEST_DIR = __dirname
@@ -114,11 +123,12 @@ describe('readFJSON', () => {
   test.each`
     description | file | expected
       ${'empty-object.json/trivial object'} | ${EMPTY_OBJ_SRC} | ${{}}
-      ${'baz.json/simple string'} | ${'./src/lib/test/data/baz.json'} | ${expectedBaz}
-      ${'root-object.json/federated object'} | ${'./src/lib/test/data/root-object.json'} | ${expectedRootObject}
-      ${'link-arr2arr.json/intra-linked object'} | ${'./src/lib/test/data/link-arr2arr.json'} | ${expectedArr2Arr}
-      ${'link-obj2arr.json/intra-linked object'} | ${'./src/lib/test/data/link-obj2arr.json'} | ${expectedObj2Arr}
-      ${'link-str2arr.json/intra-linked object'} | ${'./src/lib/test/data/link-str2arr.json'} | ${expectedStr2Arr}
+      ${'baz.json/simple string'} | ${testDataPath + '/baz.json'} | ${expectedBaz}
+      ${'root-object.json/federated object'} | ${testDataPath + '/root-object.json'} | ${expectedRootObject}
+      ${'link-arr2arr.json/intra-linked object'} | ${testDataPath + '/link-arr2arr.json'} | ${expectedArr2Arr}
+      ${'link-obj2arr.json/intra-linked object'} | ${testDataPath + '/link-obj2arr.json'} | ${expectedObj2Arr}
+      ${'link-str2arr.json/intra-linked object'} | ${testDataPath + '/link-str2arr.json'} | ${expectedStr2Arr}
+      ${'fed-link-arr2arr.json/fed+linked object'} | ${testDataPath + '/fed-link-arr2arr.json'} | ${expectedFedLinkArr2Arr}
     `('loads $description', ({ file, expected }) => {
     const data = readFJSON(file)
     expect(data).toEqual(expected)
