@@ -1,0 +1,11 @@
+{
+  "_meta": {
+    "com.liquid-labs.federated-json": {
+      "linkSpecs": [
+        { "linkRefs": "foo", "linkTo": "source", "linkKey": "name" }
+      ]
+    }
+  },
+  "foo": [ "bar", "baz" ],
+  "source": [ { "name": "bar" }, { "name": "baz", "value": true } ]
+}

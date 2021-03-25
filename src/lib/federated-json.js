@@ -62,25 +62,23 @@ const readFJSON = (filePath, options) => {
   }
 
   for (const lnkSpec of getLinkSpecs(data) || []) {
-    const { refContainer, source, keyName, penultimateContainer, finalKey } = processLinkSpec(lnkSpec, data)
+    const { finalRef, source, keyName, penultimateRef, finalKey } = processLinkSpec(lnkSpec, data)
 
-    const getRealItem = (soure, keyName, key) => {
-      const realItem = source[keyName]
-      realItem !== undefined || throw new Error(`Cannot find link '${key}' in '${lnk.linkTo}'.`)
-      return realItem
-    }
+    const getRealItem = (soure, keyName, key) =>
+      source.find((candidate) => candidate[keyName] === key)
+        || throw new Error(`Cannot find link '${key}' in '${lnkSpec.linkTo}'.`)
 
-    if (Array.isArray(refContainer)) { // replace the contents
-      const realItems = refContainer.map((key) => getRealItem(source, keyName, key))
-      refContainer.splice(0, refContainer.length, ...realItems)
+    if (Array.isArray(finalRef)) { // replace the contents
+      const realItems = finalRef.map((key) => getRealItem(source, keyName, key))
+      finalRef.splice(0, finalRef.length, ...realItems)
     }
-    else if (typeof refContainer === 'object'){
-      for (const key of Object.keys(refContainer)) {
+    else if (typeof finalRef === 'object'){
+      for (const key of Object.keys(finalRef)) {
         refContianer[key] = getRealItem(source, keyName, key)
       }
     }
     else { // it's a single key
-      penultimateContainer[finalKey] = getRealItem(source, keyName, refContainer)
+      penultimateRef[finalKey] = getRealItem(source, keyName, finalRef)
     }
   }
 

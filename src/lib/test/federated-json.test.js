@@ -34,6 +34,20 @@ const expectedRootObject = {
   'other-data' : 123
 }
 
+const linkyBarRef = { "name": "bar" }
+const linkyBazRef = { "name": "baz", "value": true }
+const expectedLinkyObject = {
+  "_meta": {
+    "com.liquid-labs.federated-json": {
+      "linkSpecs": [
+        { "linkRefs": "foo", "linkTo": "source", "linkKey": "name" }
+      ]
+    }
+  },
+  "foo": [ linkyBarRef, linkyBazRef ],
+  "source": [ linkyBarRef, linkyBazRef ]
+}
+
 const EMPTY_OBJ_SRC = './src/lib/test/data/empty-object.json'
 // end test constants
 // setup environment for test
@@ -97,13 +111,14 @@ describe('addMountPoint', () => {
 describe('readFJSON', () => {
   test.each`
     description | file | expected
-    ${'empty-object.json/trivial object'} | ${EMPTY_OBJ_SRC} | ${{}}
-    ${'baz.json/simple string'} | ${'./src/lib/test/data/baz.json'} | ${expectedBaz}
-    ${'root-object.json/complex object'} | ${'./src/lib/test/data/root-object.json'} | ${expectedRootObject}
-  `('loads $description', ({ file, expected }) => {
-  const data = readFJSON(file)
-  expect(data).toEqual(expected)
-})
+      ${'empty-object.json/trivial object'} | ${EMPTY_OBJ_SRC} | ${{}}
+      ${'baz.json/simple string'} | ${'./src/lib/test/data/baz.json'} | ${expectedBaz}
+      ${'root-object.json/federated object'} | ${'./src/lib/test/data/root-object.json'} | ${expectedRootObject}
+      ${'link-arr2arr.json/intra-linked object'} | ${'./src/lib/test/data/link-arr2arr.json'} | ${expectedLinkyObject}
+    `('loads $description', ({ file, expected }) => {
+    const data = readFJSON(file)
+    expect(data).toEqual(expected)
+  })
 
   test('can remember the source', () => {
     const data = readFJSON(EMPTY_OBJ_SRC, { rememberSource : true })
