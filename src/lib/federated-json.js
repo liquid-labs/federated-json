@@ -72,7 +72,7 @@ const readFJSON = (filePath, options) => {
       const realItems = finalRef.map((key) => getRealItem(source, keyName, key))
       finalRef.splice(0, finalRef.length, ...realItems)
     }
-    else if (typeof finalRef === 'object'){
+    else if (typeof finalRef === 'object') {
       for (const key of Object.keys(finalRef)) {
         finalRef[key] = getRealItem(source, keyName, key)
       }
@@ -163,7 +163,7 @@ const getLinkSpecs = (data) => getMyMeta(data)?.linkSpecs
 * Internal function to process a link spec into useful components utilized by the `readFJSON` and `writeFJSON`.
 */
 const processLinkSpec = (lnkSpec, data) => {
-  let { linkRefs, linkTo, linkKey: keyName } = lnkSpec
+  const { linkRefs, linkTo, linkKey: keyName } = lnkSpec
 
   const { finalRef, penultimateRef, finalKey } = processJSONPath(linkRefs, data)
   const { finalRef: source } = processJSONPath(linkTo, data)
@@ -174,7 +174,9 @@ const processLinkSpec = (lnkSpec, data) => {
 const processJSONPath = (path, data) => {
   const pathTrail = path.split('/')
   const finalKey = pathTrail.pop()
-  finalKey !== undefined || throw new Exception('Path must specify at least one key.')
+  if (finalKey !== undefined) {
+    throw new Error('Path must specify at least one key.')
+  }
 
   let penultimateRef = data // not necessarily penultimate yet, but will be...
   for (const key of pathTrail) {
@@ -182,7 +184,7 @@ const processJSONPath = (path, data) => {
   }
 
   return {
-    finalRef: penultimateRef[finalKey],
+    finalRef : penultimateRef[finalKey],
     penultimateRef,
     finalKey
   }

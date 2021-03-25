@@ -34,29 +34,30 @@ const expectedRootObject = {
   'other-data' : 123
 }
 
-const linkyBarRef = { "name": "bar" }
-const linkyBazRef = { "name": "baz", "value": true }
+const linkyBarRef = { name : 'bar' }
+const linkyBazRef = { name : 'baz', value : true }
 const linkyBase = {
-  "_meta": {
-    [FJSON_META_DATA_KEY]: {
-      "linkSpecs": [
-        { "linkRefs": "foo", "linkTo": "source", "linkKey": "name" }
+  _meta : {
+    [FJSON_META_DATA_KEY] : {
+      linkSpecs : [
+        { linkRefs : 'foo', linkTo : 'source', linkKey : 'name' }
       ]
     }
   },
-  "source": [ linkyBarRef, linkyBazRef ]
+  source : [linkyBarRef, linkyBazRef]
 }
-const expectedArr2Arr = Object.assign({ "foo": [ linkyBarRef, linkyBazRef ] }, linkyBase)
-const expectedObj2Arr = Object.assign({ "foo": { "bar": linkyBarRef, "baz": linkyBazRef } }, linkyBase)
-const expectedStr2Arr = Object.assign({ "foo": linkyBarRef }, linkyBase)
+const expectedArr2Arr = Object.assign({ foo : [linkyBarRef, linkyBazRef] }, linkyBase)
+const expectedObj2Arr = Object.assign({ foo : { bar : linkyBarRef, baz : linkyBazRef } }, linkyBase)
+const expectedStr2Arr = Object.assign({ foo : linkyBarRef }, linkyBase)
 const expectedFedLinkArr2Arr = Object.assign({}, expectedArr2Arr)
 expectedFedLinkArr2Arr._meta = Object.assign({}, expectedArr2Arr._meta)
 expectedFedLinkArr2Arr._meta[FJSON_META_DATA_KEY] = Object.assign({
-  "mountSpecs": [{
-    "dataFile": "${TEST_DIR}/data/fed-link-source.json",
-    "dataPath": "source"
-  }]},
-  expectedFedLinkArr2Arr._meta[FJSON_META_DATA_KEY])
+  mountSpecs : [{ // eslint-disable-next-line no-template-curly-in-string
+    dataFile : '${TEST_DIR}/data/fed-link-source.json',
+    dataPath : 'source'
+  }]
+},
+expectedFedLinkArr2Arr._meta[FJSON_META_DATA_KEY])
 
 const testDataPath = './src/lib/test/data'
 const EMPTY_OBJ_SRC = `${testDataPath}/empty-object.json`
@@ -130,9 +131,9 @@ describe('readFJSON', () => {
       ${'link-str2arr.json/intra-linked object'} | ${testDataPath + '/link-str2arr.json'} | ${expectedStr2Arr}
       ${'fed-link-arr2arr.json/fed+linked object'} | ${testDataPath + '/fed-link-arr2arr.json'} | ${expectedFedLinkArr2Arr}
     `('loads $description', ({ file, expected }) => {
-    const data = readFJSON(file)
-    expect(data).toEqual(expected)
-  })
+  const data = readFJSON(file)
+  expect(data).toEqual(expected)
+})
 
   test('can remember the source', () => {
     const data = readFJSON(EMPTY_OBJ_SRC, { rememberSource : true })
