@@ -178,7 +178,15 @@ var readFJSON = function readFJSON(filePath, options) {
   }
 
   var dataBits = fs.readFileSync(processedPath);
-  var data = JSON.parse(dataBits);
+  var data; // actually, would love 'const', but need to set inside try block and don'w want to expand scope of the try.
+
+  try {
+    data = JSON.parse(dataBits);
+  } catch (e) {
+    if (e instanceof SyntaxError) {
+      throw new SyntaxError("".concat(e.message, " while processing ").concat(filePath));
+    }
+  }
 
   if (rememberSource) {
     setSource(data, filePath);

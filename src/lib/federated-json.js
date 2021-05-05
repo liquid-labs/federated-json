@@ -48,7 +48,15 @@ const readFJSON = (filePath, options) => {
     throw new Error(msg)
   }
   const dataBits = fs.readFileSync(processedPath)
-  const data = JSON.parse(dataBits)
+  let data // actually, would love 'const', but need to set inside try block and don'w want to expand scope of the try.
+  try {
+    data = JSON.parse(dataBits)
+  }
+  catch (e) {
+    if (e instanceof SyntaxError) {
+      throw new SyntaxError(`${e.message} while processing ${filePath}`)
+    }
+  }
 
   if (rememberSource) {
     setSource(data, filePath)
