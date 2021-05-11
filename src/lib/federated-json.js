@@ -76,7 +76,7 @@ const readFJSON = (filePath, options) => {
       const mntObj = {}
       mountPoint[finalKey] = mntObj
 
-      const files = fs.readdirSync(dataDir, {withFileTypes: true})
+      const files = fs.readdirSync(dataDir, { withFileTypes : true })
         .filter(item => !item.isDirectory() && jsonRE.test(item.name))
         .map(item => item.name) // note 'name' is the simple/basename, not the whole path.
 
@@ -187,7 +187,7 @@ const processMountSpec = (mntSpec, data) => {
   dataFile && dataDir
     && throw new Error(`Bad mount spec; cannot specify both data file (${dataFile}) and directory (${dataDir})`)
   !dataFile && !dataDir
-    && throw new Error(`Bad mount spec; neither data file nor directory.`)
+    && throw new Error('Bad mount spec; neither data file nor directory.')
 
   dataFile && (dataFile = envTemplateString(dataFile))
   dataDir && (dataDir = envTemplateString(dataDir))
