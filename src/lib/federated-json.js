@@ -5,6 +5,7 @@
 * but does not support arrays.
 */
 import * as fs from 'fs'
+import * as path from 'path'
 
 import { envTemplateString } from './utils'
 
@@ -35,6 +36,8 @@ const addMountPoint = (data, dataPath, dataFile) => {
   }
 }
 
+const jsonRE = /\.json$/
+
 /**
 * Reads a JSON file and processes for federated mount points to construct a composite JSON object from one or more
 * files.
@@ -63,10 +66,26 @@ const readFJSON = (filePath, options) => {
   }
 
   for (const mntSpec of getMountSpecs(data) || []) {
-    const { dataFile, mountPoint, finalKey } = processMountSpec(mntSpec, data)
-    const subData = readFJSON(dataFile)
+    const { dataFile, dataDir, mountPoint, finalKey } = processMountSpec(mntSpec, data)
+    if (dataFile) {
+      const subData = readFJSON(dataFile)
 
-    mountPoint[finalKey] = subData
+      mountPoint[finalKey] = subData
+    }
+    else { // 'dataDir' is good because we expect processMountSpec() to raise an exception if neither specified.
+      const mntObj = {}
+      mountPoint[finalKey] = mntObj
+
+      const files = fs.readdirSync(dataDir, {withFileTypes: true})
+        .filter(item => !item.isDirectory() && jsonRE.test(item.name))
+        .map(item => item.name) // note 'name' is the simple/basename, not the whole path.
+
+      for (const dirFile of files) {
+        const mntPnt = dirFile.replace(jsonRE, '')
+        const subData = readFJSON(path.join(dataDir, dirFile))
+        mntObj[mntPnt] = subData
+      }
+    }
   }
 
   for (const lnkSpec of getLinkSpecs(data) || []) {
@@ -117,12 +136,22 @@ const writeFJSON = (data, filePath) => {
   const mountSpecs = getMountSpecs(data)
   if (mountSpecs) {
     for (const mntSpec of mountSpecs) {
-      const { mountPoint, finalKey } = processMountSpec(mntSpec, data)
+      const { dataFile, dataDir, mountPoint, finalKey } = processMountSpec(mntSpec, data)
 
       const subData = mountPoint[finalKey]
       mountPoint[finalKey] = null
+      if (dataFile) {
+        writeFJSON(subData, dataFile)
+      }
+      else { // processMountSpec will raise an exception if neither dataFile nor dataDir is defined.
+        // We don't bother to test what 'dataDir' is. If it exists, we won't overwrite, so the subsequent attempt to
+        // write a file into it can just fail if it's not of an appropriate type.
+        fs.existsSync(dataDir) || fs.mkdirSync(dataDir)
 
-      writeFJSON(subData, mntSpec.dataFile)
+        for (const subKey of Object.keys(subData)) {
+          writeFJSON(subData[subKey], path.join(dataDir, `${subKey}.json`))
+        }
+      }
     }
   }
 
@@ -153,13 +182,19 @@ const getMountSpecs = (data) => getMyMeta(data)?.mountSpecs
 * Internal function to process a mount spec into useful components utilized by the `readFJSON` and `writeFJSON`.
 */
 const processMountSpec = (mntSpec, data) => {
-  let { dataPath, dataFile } = mntSpec
+  let { dataPath, dataFile, dataDir } = mntSpec
 
-  dataFile = envTemplateString(dataFile)
+  dataFile && dataDir
+    && throw new Error(`Bad mount spec; cannot specify both data file (${dataFile}) and directory (${dataDir})`)
+  !dataFile && !dataDir
+    && throw new Error(`Bad mount spec; neither data file nor directory.`)
+
+  dataFile && (dataFile = envTemplateString(dataFile))
+  dataDir && (dataDir = envTemplateString(dataDir))
 
   const { penultimateRef: mountPoint, finalKey } = processJSONPath(dataPath, data)
 
-  return { dataFile, mountPoint, finalKey }
+  return { dataFile, dataDir, mountPoint, finalKey }
 }
 
 /**
