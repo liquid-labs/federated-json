@@ -58,6 +58,19 @@ expectedFedLinkArr2Arr._meta[FJSON_META_DATA_KEY] = Object.assign({
   }]
 },
 expectedFedLinkArr2Arr._meta[FJSON_META_DATA_KEY])
+const expectedScanResult = {
+  "_meta": {
+    "com.liquid-labs.federated-json": {
+      "mountSpecs": [ { "dataDir": "${TEST_DIR}/data/datadir", "dataPath": "data" } ]
+    }
+  },
+  "data": {
+    "bar": [ 1, 2, 3 ],
+    "baz": { "stuff": true },
+    "foo": "foo",
+  }
+}
+
 
 const testDataPath = './src/lib/test/data'
 const EMPTY_OBJ_SRC = `${testDataPath}/empty-object.json`
@@ -130,6 +143,7 @@ describe('readFJSON', () => {
       ${'link-obj2arr.json/intra-linked object'} | ${testDataPath + '/link-obj2arr.json'} | ${expectedObj2Arr}
       ${'link-str2arr.json/intra-linked object'} | ${testDataPath + '/link-str2arr.json'} | ${expectedStr2Arr}
       ${'fed-link-arr2arr.json/fed+linked object'} | ${testDataPath + '/fed-link-arr2arr.json'} | ${expectedFedLinkArr2Arr}
+      ${'data-dir.json/scan-and-load'} | ${testDataPath + '/data-dir.json'} | ${expectedScanResult}
     `('loads $description', ({ file, expected }) => {
   const data = readFJSON(file)
   expect(data).toEqual(expected)
