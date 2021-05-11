@@ -36,7 +36,7 @@ const addMountPoint = (data, dataPath, dataFile) => {
   }
 }
 
-const jsonRE = /\.json$/i
+const jsonRE = /\.json$/
 
 /**
 * Reads a JSON file and processes for federated mount points to construct a composite JSON object from one or more
@@ -136,12 +136,22 @@ const writeFJSON = (data, filePath) => {
   const mountSpecs = getMountSpecs(data)
   if (mountSpecs) {
     for (const mntSpec of mountSpecs) {
-      const { mountPoint, finalKey } = processMountSpec(mntSpec, data)
+      const { dataFile, dataDir, mountPoint, finalKey } = processMountSpec(mntSpec, data)
 
       const subData = mountPoint[finalKey]
       mountPoint[finalKey] = null
+      if (dataFile) {
+        writeFJSON(subData, dataFile)
+      }
+      else { // processMountSpec will raise an exception if neither dataFile nor dataDir is defined.
+        // We don't bother to test what 'dataDir' is. If it exists, we won't overwrite, so the subsequent attempt to
+        // write a file into it can just fail if it's not of an appropriate type.
+        fs.existsSync(dataDir) || fs.mkdirSync(dataDir)
 
-      writeFJSON(subData, mntSpec.dataFile)
+        for (const subKey of Object.keys(subData)) {
+          writeFJSON(subData[subKey], path.join(dataDir, `${subKey}.json`))
+        }
+      }
     }
   }
 

@@ -181,8 +181,8 @@ describe('writeFJSON', () => {
     expect(JSON.parse(contents)).toEqual(testData)
   })
 
-  test('write single embed', () => {
-    const rootTestFile = `${testDir}/single-embed-object.json`
+  test('write single file mount', () => {
+    const rootTestFile = `${testDir}/single-mount-file.json`
     const barTestFile = `${testDir}/bar.json`
     const testEmbed = { bar : "I'm an embed!" }
     const testData = {
@@ -200,6 +200,30 @@ describe('writeFJSON', () => {
     expect(JSON.parse(barContents)).toEqual(testEmbed)
   })
 
+  test('write single dir mount', () => {
+    const rootTestFile = `${testDir}/single-mount-dir.json`
+    const barTestDir = `${testDir}/bar`
+    const barValue = "I'm an embed!"
+    const bazValue = [ 1, 2, "Hi!" ]
+    const testEmbed = { bar : barValue, baz: bazValue }
+    const testData = {
+      _meta : { [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : 'foo', dataDir : barTestDir }] } },
+      foo   : testEmbed
+    }
+    writeFJSON(testData, rootTestFile)
+
+    // the written object will have a 'null' foo
+    testData.foo = null
+    const rootContents = fs.readFileSync(rootTestFile)
+    expect(JSON.parse(rootContents)).toEqual(testData)
+
+    const barContents = fs.readFileSync(`${barTestDir}/bar.json`)
+    expect(JSON.parse(barContents)).toEqual(barValue)
+
+    const bazContents = fs.readFileSync(`${barTestDir}/baz.json`)
+    expect(JSON.parse(bazContents)).toEqual(bazValue)
+  })
+
   test('write to meta source', () => {
     const testFile = `${testDir}/empty-object.json`
     const testData = {}
@@ -209,7 +233,7 @@ describe('writeFJSON', () => {
     expect(JSON.parse(contents)).toEqual(testData)
   })
 
-  test('write fails with no target path can be discerned', () => {
+  test('write fails when no target path can be discerned', () => {
     const testData = {}
     expect(() => writeFJSON(testData)).toThrow()
   })
