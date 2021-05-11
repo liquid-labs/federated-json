@@ -136,18 +136,18 @@ describe('addMountPoint', () => {
 describe('readFJSON', () => {
   test.each`
     description | file | expected
-      ${'empty-object.json/trivial object'} | ${EMPTY_OBJ_SRC} | ${{}}
-      ${'baz.json/simple string'} | ${testDataPath + '/baz.json'} | ${expectedBaz}
-      ${'root-object.json/federated object'} | ${testDataPath + '/root-object.json'} | ${expectedRootObject}
-      ${'link-arr2arr.json/intra-linked object'} | ${testDataPath + '/link-arr2arr.json'} | ${expectedArr2Arr}
-      ${'link-obj2arr.json/intra-linked object'} | ${testDataPath + '/link-obj2arr.json'} | ${expectedObj2Arr}
-      ${'link-str2arr.json/intra-linked object'} | ${testDataPath + '/link-str2arr.json'} | ${expectedStr2Arr}
-      ${'fed-link-arr2arr.json/fed+linked object'} | ${testDataPath + '/fed-link-arr2arr.json'} | ${expectedFedLinkArr2Arr}
-      ${'data-dir.json/scan-and-load'} | ${testDataPath + '/data-dir.json'} | ${expectedScanResult}
-    `('loads $description', ({ file, expected }) => {
-  const data = readFJSON(file)
-  expect(data).toEqual(expected)
-})
+    ${'empty-object.json/trivial object'} | ${EMPTY_OBJ_SRC} | ${{}}
+    ${'baz.json/simple string'} | ${testDataPath + '/baz.json'} | ${expectedBaz}
+    ${'root-object.json/federated object'} | ${testDataPath + '/root-object.json'} | ${expectedRootObject}
+    ${'link-arr2arr.json/intra-linked object'} | ${testDataPath + '/link-arr2arr.json'} | ${expectedArr2Arr}
+    ${'link-obj2arr.json/intra-linked object'} | ${testDataPath + '/link-obj2arr.json'} | ${expectedObj2Arr}
+    ${'link-str2arr.json/intra-linked object'} | ${testDataPath + '/link-str2arr.json'} | ${expectedStr2Arr}
+    ${'fed-link-arr2arr.json/fed+linked object'} | ${testDataPath + '/fed-link-arr2arr.json'} | ${expectedFedLinkArr2Arr}
+    ${'data-dir.json/scan-and-load'} | ${testDataPath + '/data-dir.json'} | ${expectedScanResult}
+  `('loads $description', ({ file, expected }) => {
+    const data = readFJSON(file)
+    expect(data).toEqual(expected)
+  })
 
   test('can remember the source', () => {
     const data = readFJSON(EMPTY_OBJ_SRC, { rememberSource : true })
@@ -164,6 +164,11 @@ describe('readFJSON', () => {
     const badFileName = `\${HOME}/${badFileBaseName}`
     const processedFileName = `${process.env.HOME}/${badFileBaseName}`
     expect(() => { readFJSON(badFileName) }).toThrow(new RegExp(`\\${badFileName}.*\\('${processedFileName}'\\)`))
+  })
+
+  test('throws useful error when JSON syntax is bad.', () => {
+    const badSyntaxFile = `${testDataPath}/bad-syntax.json`
+    expect(() => { readFJSON(badSyntaxFile) }).toThrow(new RegExp(`unexpected token.*${badSyntaxFile}`, 'i'))
   })
 })
 
