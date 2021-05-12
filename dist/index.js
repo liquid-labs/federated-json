@@ -3,6 +3,7 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 var fs = require('fs');
+var path = require('path');
 
 function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
@@ -160,11 +161,12 @@ var addMountPoint = function addMountPoint(data, dataPath, dataFile) {
     mountSpecs.push(mountSpec);
   }
 };
+
+var jsonRE = /\.json$/;
 /**
 * Reads a JSON file and processes for federated mount points to construct a composite JSON object from one or more
 * files.
 */
-
 
 var readFJSON = function readFJSON(filePath, options) {
   var _ref = options || {},
@@ -201,11 +203,43 @@ var readFJSON = function readFJSON(filePath, options) {
 
       var _processMountSpec = processMountSpec(mntSpec, data),
           dataFile = _processMountSpec.dataFile,
+          dataDir = _processMountSpec.dataDir,
           mountPoint = _processMountSpec.mountPoint,
           finalKey = _processMountSpec.finalKey;
 
-      var subData = readFJSON(dataFile);
-      mountPoint[finalKey] = subData;
+      if (dataFile) {
+        var subData = readFJSON(dataFile);
+        mountPoint[finalKey] = subData;
+      } else {
+        // 'dataDir' is good because we expect processMountSpec() to raise an exception if neither specified.
+        var mntObj = {};
+        mountPoint[finalKey] = mntObj;
+        var files = fs.readdirSync(dataDir, {
+          withFileTypes: true
+        }).filter(function (item) {
+          return !item.isDirectory() && jsonRE.test(item.name);
+        }).map(function (item) {
+          return item.name;
+        }); // note 'name' is the simple/basename, not the whole path.
+
+        var _iterator3 = _createForOfIteratorHelper$1(files),
+            _step3;
+
+        try {
+          for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+            var dirFile = _step3.value;
+            var mntPnt = dirFile.replace(jsonRE, '');
+
+            var _subData = readFJSON(path.join(dataDir, dirFile));
+
+            mntObj[mntPnt] = _subData;
+          }
+        } catch (err) {
+          _iterator3.e(err);
+        } finally {
+          _iterator3.f();
+        }
+      }
     }
   } catch (err) {
     _iterator.e(err);
@@ -291,25 +325,40 @@ var writeFJSON = function writeFJSON(data, filePath) {
   var mountSpecs = getMountSpecs(data);
 
   if (mountSpecs) {
-    var _iterator3 = _createForOfIteratorHelper$1(mountSpecs),
-        _step3;
+    var _iterator4 = _createForOfIteratorHelper$1(mountSpecs),
+        _step4;
 
     try {
-      for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-        var mntSpec = _step3.value;
+      for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+        var mntSpec = _step4.value;
 
         var _processMountSpec2 = processMountSpec(mntSpec, data),
+            dataFile = _processMountSpec2.dataFile,
+            dataDir = _processMountSpec2.dataDir,
             mountPoint = _processMountSpec2.mountPoint,
             finalKey = _processMountSpec2.finalKey;
 
         var subData = mountPoint[finalKey];
         mountPoint[finalKey] = null;
-        writeFJSON(subData, mntSpec.dataFile);
+
+        if (dataFile) {
+          writeFJSON(subData, dataFile);
+        } else {
+          // processMountSpec will raise an exception if neither dataFile nor dataDir is defined.
+          // We don't bother to test what 'dataDir' is. If it exists, we won't overwrite, so the subsequent attempt to
+          // write a file into it can just fail if it's not of an appropriate type.
+          fs.existsSync(dataDir) || fs.mkdirSync(dataDir);
+
+          for (var _i2 = 0, _Object$keys2 = Object.keys(subData); _i2 < _Object$keys2.length; _i2++) {
+            var subKey = _Object$keys2[_i2];
+            writeFJSON(subData[subKey], path.join(dataDir, "".concat(subKey, ".json")));
+          }
+        }
       }
     } catch (err) {
-      _iterator3.e(err);
+      _iterator4.e(err);
     } finally {
-      _iterator3.f();
+      _iterator4.f();
     }
   }
 
@@ -356,8 +405,18 @@ var getMountSpecs = function getMountSpecs(data) {
 
 var processMountSpec = function processMountSpec(mntSpec, data) {
   var dataPath = mntSpec.dataPath,
-      dataFile = mntSpec.dataFile;
-  dataFile = envTemplateString(dataFile);
+      dataFile = mntSpec.dataFile,
+      dataDir = mntSpec.dataDir;
+  dataFile && dataDir // eslint-disable-line no-unused-expressions
+  && function (e) {
+    throw e;
+  }(new Error("Bad mount spec; cannot specify both data file (".concat(dataFile, ") and directory (").concat(dataDir, ")")));
+  !dataFile && !dataDir // eslint-disable-line no-unused-expressions
+  && function (e) {
+    throw e;
+  }(new Error('Bad mount spec; neither data file nor directory.'));
+  dataFile && (dataFile = envTemplateString(dataFile));
+  dataDir && (dataDir = envTemplateString(dataDir));
 
   var _processJSONPath = processJSONPath(dataPath, data),
       mountPoint = _processJSONPath.penultimateRef,
@@ -365,6 +424,7 @@ var processMountSpec = function processMountSpec(mntSpec, data) {
 
   return {
     dataFile: dataFile,
+    dataDir: dataDir,
     mountPoint: mountPoint,
     finalKey: finalKey
   };
@@ -416,18 +476,18 @@ var processJSONPath = function processJSONPath(path, data) {
 
   var penultimateRef = data; // not necessarily penultimate yet, but will be...
 
-  var _iterator4 = _createForOfIteratorHelper$1(pathTrail),
-      _step4;
+  var _iterator5 = _createForOfIteratorHelper$1(pathTrail),
+      _step5;
 
   try {
-    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-      var key = _step4.value;
+    for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+      var key = _step5.value;
       penultimateRef = penultimateRef[key];
     }
   } catch (err) {
-    _iterator4.e(err);
+    _iterator5.e(err);
   } finally {
-    _iterator4.f();
+    _iterator5.f();
   }
 
   return {
