@@ -60,7 +60,7 @@ expectedFedLinkArr2Arr._meta[FJSON_META_DATA_KEY] = Object.assign({
 expectedFedLinkArr2Arr._meta[FJSON_META_DATA_KEY])
 const expectedScanResult = {
   _meta : {
-    'com.liquid-labs.federated-json' : {
+    'com.liquid-labs.federated-json' : { // eslint-disable-next-line no-template-curly-in-string
       mountSpecs : [{ dataDir : '${TEST_DIR}/data/datadir', dataPath : 'data' }]
     }
   },

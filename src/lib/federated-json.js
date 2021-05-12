@@ -184,9 +184,9 @@ const getMountSpecs = (data) => getMyMeta(data)?.mountSpecs
 const processMountSpec = (mntSpec, data) => {
   let { dataPath, dataFile, dataDir } = mntSpec
 
-  dataFile && dataDir
+  dataFile && dataDir // eslint-disable-line no-unused-expressions
     && throw new Error(`Bad mount spec; cannot specify both data file (${dataFile}) and directory (${dataDir})`)
-  !dataFile && !dataDir
+  !dataFile && !dataDir // eslint-disable-line no-unused-expressions
     && throw new Error('Bad mount spec; neither data file nor directory.')
 
   dataFile && (dataFile = envTemplateString(dataFile))
