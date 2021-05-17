@@ -94,31 +94,34 @@ var replaceRE = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g;
 var envTemplateString = function envTemplateString(path) {
   var origPath = path; // used for error messages
 
-  var matches = toConsumableArray(path.matchAll(replaceRE));
+  var matches; // A replaced var may itself reference vars, so we keep processing until everything is resolved.
 
-  matches.reverse(); // The reverse allows us to use the start and end indexes without messing up the string.
+  while ((matches = toConsumableArray(path.matchAll(replaceRE))).length > 0) {
+    // const matches = [...path.matchAll(replaceRE)]
+    matches.reverse(); // The reverse allows us to use the start and end indexes without messing up the string.
 
-  var _iterator = _createForOfIteratorHelper(matches),
-      _step;
+    var _iterator = _createForOfIteratorHelper(matches),
+        _step;
 
-  try {
-    for (_iterator.s(); !(_step = _iterator.n()).done;) {
-      var matchInfo = _step.value;
-      var match = matchInfo[0];
-      var key = matchInfo[1];
-      var value = process.env[key];
-      var matchStart = matchInfo.index;
+    try {
+      for (_iterator.s(); !(_step = _iterator.n()).done;) {
+        var matchInfo = _step.value;
+        var match = matchInfo[0];
+        var key = matchInfo[1];
+        var value = process.env[key];
+        var matchStart = matchInfo.index;
 
-      if (value === undefined) {
-        throw new Error("No such environment parameter '".concat(key, "' found in path replacement: '").concat(origPath, "'."));
+        if (value === undefined) {
+          throw new Error("No such environment parameter '".concat(key, "' found in path replacement: '").concat(origPath, "'."));
+        }
+
+        path = path.substring(0, matchStart) + value + path.substring(matchStart + match.length);
       }
-
-      path = path.substring(0, matchStart) + value + path.substring(matchStart + match.length);
+    } catch (err) {
+      _iterator.e(err);
+    } finally {
+      _iterator.f();
     }
-  } catch (err) {
-    _iterator.e(err);
-  } finally {
-    _iterator.f();
   }
 
   return path;

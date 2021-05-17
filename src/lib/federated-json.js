@@ -215,11 +215,11 @@ const processLinkSpec = (lnkSpec, data) => {
 }
 
 const processJSONPath = (path, data) => {
+  if (!path) {
+    throw new Error("No 'dataPath' specified for mount spec mount point.")
+  }
   const pathTrail = path.split('/')
   const finalKey = pathTrail.pop()
-  if (finalKey === undefined) {
-    throw new Error('Path must specify at least one key.')
-  }
 
   let penultimateRef = data // not necessarily penultimate yet, but will be...
   for (const key of pathTrail) {

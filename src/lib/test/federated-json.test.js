@@ -169,6 +169,16 @@ describe('readFJSON', () => {
     const badSyntaxFile = `${testDataPath}/bad-syntax.json`
     expect(() => { readFJSON(badSyntaxFile) }).toThrow(new RegExp(`unexpected token.*${badSyntaxFile}`, 'i'))
   })
+
+  test('throws useful error when no data source specified in mnt spec', () => {
+    const badMntSpec = `${testDataPath}/bad-mnt-spec-no-data-path.json`
+    expect(() => { readFJSON(badMntSpec) }).toThrow(/No 'dataPath' specified/)
+  })
+
+  test('throws useful error when no data source is empty in mnt spec', () => {
+    const badMntSpec = `${testDataPath}/bad-mnt-spec-empty-data-path.json`
+    expect(() => { readFJSON(badMntSpec) }).toThrow(/No 'dataPath' specified/)
+  })
 })
 
 describe('writeFJSON', () => {
