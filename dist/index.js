@@ -470,13 +470,12 @@ var processLinkSpec = function processLinkSpec(lnkSpec, data) {
 };
 
 var processJSONPath = function processJSONPath(path, data) {
-  var pathTrail = path.split('/');
-  var finalKey = pathTrail.pop();
-
-  if (finalKey === undefined) {
-    throw new Error('Path must specify at least one key.');
+  if (!path) {
+    throw new Error("No 'dataPath' specified for mount spec mount point.");
   }
 
+  var pathTrail = path.split('/');
+  var finalKey = pathTrail.pop();
   var penultimateRef = data; // not necessarily penultimate yet, but will be...
 
   var _iterator5 = _createForOfIteratorHelper$1(pathTrail),
