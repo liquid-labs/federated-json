@@ -13,7 +13,7 @@ const expectedRootObject = {
   _meta : {
     [FJSON_META_DATA_KEY] : {
       mountSpecs : [ // eslint-disable-next-line no-template-curly-in-string
-        { dataPath : 'foo/bar', dataFile : '${TEST_DIR}/data/foo-bar.json' }
+        { dataPath : '.foo.bar', dataFile : '${TEST_DIR}/data/foo-bar.json' }
       ]
     }
   },
@@ -22,7 +22,7 @@ const expectedRootObject = {
       _meta : {
         [FJSON_META_DATA_KEY] : {
           mountSpecs : [ // eslint-disable-next-line no-template-curly-in-string
-            { dataPath : 'baz', dataFile : '${TEST_DIR}/data/baz.json' }
+            { dataPath : '.baz', dataFile : '${TEST_DIR}/data/baz.json' }
           ]
         }
       },
@@ -40,7 +40,7 @@ const linkyBase = {
   _meta : {
     [FJSON_META_DATA_KEY] : {
       linkSpecs : [
-        { linkRefs : 'foo', linkTo : 'source', linkKey : 'name' }
+        { linkRefs : '.foo', linkTo : '.source', linkKey : 'name' }
       ]
     }
   },
@@ -54,14 +54,14 @@ expectedFedLinkArr2Arr._meta = Object.assign({}, expectedArr2Arr._meta)
 expectedFedLinkArr2Arr._meta[FJSON_META_DATA_KEY] = Object.assign({
   mountSpecs : [{ // eslint-disable-next-line no-template-curly-in-string
     dataFile : '${TEST_DIR}/data/fed-link-source.json',
-    dataPath : 'source'
+    dataPath : '.source'
   }]
 },
 expectedFedLinkArr2Arr._meta[FJSON_META_DATA_KEY])
 const expectedScanResult = {
   _meta : {
     'com.liquid-labs.federated-json' : { // eslint-disable-next-line no-template-curly-in-string
-      mountSpecs : [{ dataDir : '${TEST_DIR}/data/datadir', dataPath : 'data' }]
+      mountSpecs : [{ dataDir : '${TEST_DIR}/data/datadir', dataPath : '.data' }]
     }
   },
   data : {
@@ -74,7 +74,7 @@ const expectedScanResult = {
 const testDataPath = './src/lib/test/data'
 const EMPTY_OBJ_SRC = `${testDataPath}/empty-object.json`
 // end test constants
-// setup environment for test
+// setup environment for test. Note that 'TEST_DIR' will point to the test-staging, while 'testDataPath' points to src.
 process.env.TEST_DIR = __dirname
 
 describe('addMountPoint', () => {
@@ -82,24 +82,24 @@ describe('addMountPoint', () => {
   beforeEach(() => { data = { foo : { bar : true }, baz : true } })
 
   test('sets initial root mount points', () => {
-    addMountPoint(data, 'foo', './some-file.json')
+    addMountPoint(data, '.foo', './some-file.json')
     expect(data._meta).toEqual({
-      [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : 'foo', dataFile : './some-file.json' }] }
+      [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : '.foo', dataFile : './some-file.json' }] }
     })
   })
 
   test('sets initial root mount points', () => {
-    addMountPoint(data, 'foo', './some-file.json')
+    addMountPoint(data, '.foo', './some-file.json')
     expect(data._meta).toEqual({
-      [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : 'foo', dataFile : './some-file.json' }] }
+      [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : '.foo', dataFile : './some-file.json' }] }
     })
   })
 
   test('updates mount points', () => {
-    addMountPoint(data, 'foo', './some-file.json')
-    addMountPoint(data, 'foo', './another-file.json')
+    addMountPoint(data, '.foo', './some-file.json')
+    addMountPoint(data, '.foo', './another-file.json')
     expect(data._meta).toEqual({
-      [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : 'foo', dataFile : './another-file.json' }] }
+      [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : '.foo', dataFile : './another-file.json' }] }
     })
   })
 
@@ -110,12 +110,12 @@ describe('addMountPoint', () => {
     setSource(data, './our-file.json')
     expect(data._meta).toEqual(metaModel)
 
-    addMountPoint(data, 'foo', './some-file.json')
-    metaModel[FJSON_META_DATA_KEY].mountSpecs = [{ dataPath : 'foo', dataFile : './some-file.json' }]
+    addMountPoint(data, '.foo', './some-file.json')
+    metaModel[FJSON_META_DATA_KEY].mountSpecs = [{ dataPath : '.foo', dataFile : './some-file.json' }]
     expect(data._meta).toEqual(metaModel)
 
-    addMountPoint(data, 'foo', './another-file.json')
-    metaModel[FJSON_META_DATA_KEY].mountSpecs = [{ dataPath : 'foo', dataFile : './another-file.json' }]
+    addMountPoint(data, '.foo', './another-file.json')
+    metaModel[FJSON_META_DATA_KEY].mountSpecs = [{ dataPath : '.foo', dataFile : './another-file.json' }]
     expect(data._meta).toEqual(metaModel)
   })
 
@@ -190,65 +190,111 @@ describe('writeFJSON', () => {
   test('write {}', () => {
     const testFile = `${testDir}/empty-object.json`
     const testData = {}
-    writeFJSON(testData, testFile)
+    writeFJSON({ data: testData, filePath: testFile })
     const contents = fs.readFileSync(testFile)
     expect(JSON.parse(contents)).toEqual(testData)
   })
 
-  test('write single file mount', () => {
+  describe('write single file mount', () => {
     const rootTestFile = `${testDir}/single-mount-file.json`
     const barTestFile = `${testDir}/bar.json`
     const testEmbed = { bar : "I'm an embed!" }
     const testData = {
-      _meta : { [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : 'foo', dataFile : barTestFile }] } },
+      _meta : { [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : '.foo', dataFile : barTestFile }] } },
       foo   : testEmbed
     }
-    writeFJSON(testData, rootTestFile)
+    beforeAll(() => {
+      writeFJSON({ data: testData, filePath: rootTestFile })
+    })
 
-    // the written object will have a 'null' foo
-    testData.foo = null
-    const rootContents = fs.readFileSync(rootTestFile)
-    expect(JSON.parse(rootContents)).toEqual(testData)
+    test('writes truncated root file', () => {
+      // the written object should have a 'null' foo
+      const exemplar = Object.assign({}, testData)
+      exemplar.foo = null
+      const rootContents = fs.readFileSync(rootTestFile)
+      expect(JSON.parse(rootContents)).toEqual(exemplar)
+    })
 
-    const barContents = fs.readFileSync(barTestFile)
-    expect(JSON.parse(barContents)).toEqual(testEmbed)
+    test('writes leaf file', () => {
+      const barContents = fs.readFileSync(barTestFile)
+      expect(JSON.parse(barContents)).toEqual(testEmbed)
+    })
+
+    test('leaves source JSON intact', () => {
+      expect(testData.foo).toEqual(testEmbed)
+    })
   })
 
-  test('write single dir mount', () => {
+  describe('write single dir mount', () => {
     const rootTestFile = `${testDir}/single-mount-dir.json`
     const barTestDir = `${testDir}/bar`
     const barValue = "I'm an embed!"
     const bazValue = [1, 2, 'Hi!']
     const testEmbed = { bar : barValue, baz : bazValue }
     const testData = {
-      _meta : { [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : 'foo', dataDir : barTestDir }] } },
+      _meta : { [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : '.foo', dataDir : barTestDir }] } },
       foo   : testEmbed
     }
-    writeFJSON(testData, rootTestFile)
+    beforeAll(() => {
+      writeFJSON({ data: testData, filePath: rootTestFile })
+    })
 
-    // the written object will have a 'null' foo
-    testData.foo = null
-    const rootContents = fs.readFileSync(rootTestFile)
-    expect(JSON.parse(rootContents)).toEqual(testData)
+    test('writes truncated root file', () => {
+      // the written object will have a 'null' foo
+      // the written object should have a 'null' foo
+      const exemplar = Object.assign({}, testData)
+      exemplar.foo = null
+      const rootContents = fs.readFileSync(rootTestFile)
+      expect(JSON.parse(rootContents)).toEqual(exemplar)
+    })
 
-    const barContents = fs.readFileSync(`${barTestDir}/bar.json`)
-    expect(JSON.parse(barContents)).toEqual(barValue)
+    test('writes leaf files', () => {
+      const barContents = fs.readFileSync(`${barTestDir}/bar.json`)
+      expect(JSON.parse(barContents)).toEqual(barValue)
 
-    const bazContents = fs.readFileSync(`${barTestDir}/baz.json`)
-    expect(JSON.parse(bazContents)).toEqual(bazValue)
+      const bazContents = fs.readFileSync(`${barTestDir}/baz.json`)
+      expect(JSON.parse(bazContents)).toEqual(bazValue)
+    })
+
+    test('leaves source JSON intact', () => {
+      expect(testData.foo).toEqual(testEmbed)
+    })
   })
 
-  test('write to meta source', () => {
+  test('supports partial branch writes', async () => {
+    const testStagingDataPath = `${__dirname}/data`
+    // TODO: In theory, it would be better to start form 'expectedRootObject', but we should turn that into a function to isolate instances from cross-pollution
+    const dataFile = `${testStagingDataPath}/root-object.json`
+    const data = readFJSON(dataFile, { rememberSource : true })
+
+    const preRootStat = fs.statSync(dataFile, { bigint: true })
+    const preFooStat = fs.statSync(`${testStagingDataPath}/foo-bar.json`, { bigint: true })
+    const preBazStat = fs.statSync(`${testStagingDataPath}/baz.json`, { bigint: true })
+
+    data.foo.bar['another key'] = "I'm a new value!"
+    data.foo.bar.baz = [ 'I am no longer', 'just a string' ]
+    writeFJSON({ data, savePath: '.foo' })
+
+    const postRootStat = fs.statSync(dataFile, { bigint: true })
+    const postFooStat = fs.statSync(`${testStagingDataPath}/foo-bar.json`, { bigint: true })
+    const postBazStat = fs.statSync(`${testStagingDataPath}/baz.json`, { bigint: true })
+
+    expect(preRootStat).toEqual(postRootStat)
+    expect(preFooStat.mtimeNs).toBeLessThan(postFooStat.mtimeNs)
+    expect(preBazStat.mtimeNs).toBeLessThan(postBazStat.mtimeNs)
+  })
+
+  test('will write to meta source when prsent', () => {
     const testFile = `${testDir}/empty-object.json`
     const testData = {}
     setSource(testData, testFile)
-    writeFJSON(testData)
+    writeFJSON({ data: testData })
     const contents = fs.readFileSync(testFile)
     expect(JSON.parse(contents)).toEqual(testData)
   })
 
   test('write fails when no target path can be discerned', () => {
     const testData = {}
-    expect(() => writeFJSON(testData)).toThrow()
+    expect(() => writeFJSON({ data: testData })).toThrow()
   })
 })

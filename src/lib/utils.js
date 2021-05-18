@@ -29,4 +29,35 @@ const envTemplateString = (path) => {
   return path
 }
 
-export { envTemplateString }
+/**
+* Returns true if pathA is on pathB. I.e., if pathB is or under pathA. E.g.:
+* - ('.', '.foo') => true
+* - ('.foo', '.') => false
+* - ('.foo', '.foo') => true
+*
+* Note, this function assumes the paths are valid JSON paths.
+*/
+const testJsonPaths = (pathA, pathB) => {
+  if ((typeof pathA !== 'string' && !(pathA instanceof String))
+      || (typeof pathB !== 'string' && !(pathB instanceof String))) {
+    throw new Error(`Unexpected non-string input: '${pathA}', '${pathB}'`)
+  }
+  const pathABits = pathA.split('.')
+  const pathBBits = pathB.split('.')
+  if (pathABits.length > pathBBits.length) { return false }
+
+  while (pathABits[0] === '') { pathABits.shift() }
+  while (pathBBits[0] === '') { pathBBits.shift() }
+  if (pathABits.length > pathBBits.length) { return false }
+
+  while (pathABits.length > 0) {
+    const aBit = pathABits.shift()
+    const bBit = pathBBits.shift()
+
+    if (bBit !== aBit) { return false }
+  }
+
+  return true
+}
+
+export { envTemplateString, testJsonPaths }

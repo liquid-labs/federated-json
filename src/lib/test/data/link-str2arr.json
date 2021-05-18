@@ -2,7 +2,7 @@
   "_meta": {
     "com.liquid-labs.federated-json": {
       "linkSpecs": [
-        { "linkRefs": "foo", "linkTo": "source", "linkKey": "name" }
+        { "linkRefs": ".foo", "linkTo": ".source", "linkKey": "name" }
       ]
     }
   },
