@@ -266,7 +266,7 @@ describe('writeFJSON', () => {
 
     test('to mounted files', () => {
       // TODO: In theory, it would be better to start form 'expectedRootObject', but we should turn that into a function to isolate instances from cross-pollution
-      const dataFile = `${testStagingDataPath}/root-object.json`
+      const dataFile = `${testDataPath}/root-object.json`
       const data = readFJSON(dataFile, { rememberSource : true })
 
       const preRootStat = fs.statSync(dataFile, { bigint : true })
@@ -293,37 +293,44 @@ describe('writeFJSON', () => {
       expect(JSON.parse(fooBarContents)).toEqual(data.foo.bar)
     })
 
-    test('to whole mounted directories', () => {
-      // TODO: In theory, it would be better to start form 'expectedRootObject', but we should turn that into a function to isolate instances from cross-pollution
-      const dataFile = `${testStagingDataPath}/data-dir.json`
-      const data = readFJSON(dataFile, { rememberSource : true })
-
+    describe('to mounted directories', () => {
+      let dataFile, data, preRootStat
+      const preStats = {}
       const loadStats = (target) => {
         for (const subKey of ['foo', 'bar', 'baz']) {
           target[subKey] = fs.statSync(`${testStagingDataPath}/datadir/${subKey}.json`, { bigint : true })
         }
       }
+      beforeAll(() => {
+        // TODO: In theory, it would be better to start form 'expectedRootObject', but we should turn that into a function to isolate instances from cross-pollution
+        dataFile = `${testDataPath}/data-dir.json`
+        data = readFJSON(dataFile, { rememberSource : true })
 
-      const preRootStat = fs.statSync(`${testStagingDataPath}/data-dir.json`, { bigint : true })
-      const preStats = {}
-      loadStats(preStats)
 
-      data.data.foo = "new foo"
-      data.data.baz['more stuff'] = 'More stuff'
-      data.data.bar.push(4)
 
-      writeFJSON({ data, saveFrom : '.data' })
+        preRootStat = fs.statSync(dataFile, { bigint : true })
 
-      const postRootStat = fs.statSync(`${testStagingDataPath}/data-dir.json`, { bigint : true })
-      const postStats = {}
-      loadStats(postStats)
+        loadStats(preStats)
 
-      expect(preRootStat).toEqual(postRootStat)
-      for (const key in preStats) {
-        expect(preStats[key].mtimeNs).toBeLessThan(postStats[key].mtimeNs)
-        const leafContents = fs.readFileSync(`${testStagingDataPath}/datadir/${key}.json`)
-        expect(JSON.parse(leafContents)).toEqual(data.data[key])
-      }
+        data.data.foo = "new foo"
+        data.data.baz['more stuff'] = 'More stuff'
+        data.data.bar.push(4)
+      })
+
+      test('update all leaves', () => {
+        writeFJSON({ data, saveFrom : '.data' })
+
+        const postRootStat = fs.statSync(dataFile, { bigint : true })
+        const postStats = {}
+        loadStats(postStats)
+
+        expect(preRootStat).toEqual(postRootStat)
+        for (const key in preStats) {
+          expect(preStats[key].mtimeNs).toBeLessThan(postStats[key].mtimeNs)
+          const leafContents = fs.readFileSync(`${testStagingDataPath}/datadir/${key}.json`)
+          expect(JSON.parse(leafContents)).toEqual(data.data[key])
+        }
+      })
     })
   })
 
