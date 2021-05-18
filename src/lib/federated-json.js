@@ -163,7 +163,7 @@ const writeFJSON = ({ data, filePath, saveFrom, jsonPathToSelf }) => {
             data           : subData[subKey],
             filePath       : path.join(dataDir, `${subKey}.json`),
             saveFrom,
-            jsonPathToSelf : updatejsonPathToSelf(dataPath, jsonPathToSelf)
+            jsonPathToSelf : updatejsonPathToSelf(`${dataPath}.${subKey}`, jsonPathToSelf)
           })
         }
       }

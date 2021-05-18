@@ -305,19 +305,15 @@ describe('writeFJSON', () => {
         // TODO: In theory, it would be better to start form 'expectedRootObject', but we should turn that into a function to isolate instances from cross-pollution
         dataFile = `${testDataPath}/data-dir.json`
         data = readFJSON(dataFile, { rememberSource : true })
-
-
-
         preRootStat = fs.statSync(dataFile, { bigint : true })
-
-        loadStats(preStats)
-
-        data.data.foo = "new foo"
-        data.data.baz['more stuff'] = 'More stuff'
-        data.data.bar.push(4)
       })
 
       test('update all leaves', () => {
+        loadStats(preStats)
+        data.data.foo = "new foo"
+        data.data.baz['more stuff'] = 'More stuff'
+        data.data.bar.push(4)
+
         writeFJSON({ data, saveFrom : '.data' })
 
         const postRootStat = fs.statSync(dataFile, { bigint : true })
@@ -327,6 +323,28 @@ describe('writeFJSON', () => {
         expect(preRootStat).toEqual(postRootStat)
         for (const key in preStats) {
           expect(preStats[key].mtimeNs).toBeLessThan(postStats[key].mtimeNs)
+          const leafContents = fs.readFileSync(`${testStagingDataPath}/datadir/${key}.json`)
+          expect(JSON.parse(leafContents)).toEqual(data.data[key])
+        }
+      })
+
+      test('update one leaf', () => {
+        loadStats(preStats)
+        data.data.baz['more stuff'] = 'Lots of stuff here'
+        writeFJSON({ data, saveFrom : '.data.baz' })
+
+        const postRootStat = fs.statSync(dataFile, { bigint : true })
+        const postStats = {}
+        loadStats(postStats)
+
+        expect(preRootStat).toEqual(postRootStat)
+        for (const key in preStats) {
+          if (key === 'baz') {
+            expect(preStats[key].mtimeNs).toBeLessThan(postStats[key].mtimeNs)
+          }
+          else {
+            expect(preStats[key]).toEqual(postStats[key])
+          }
           const leafContents = fs.readFileSync(`${testStagingDataPath}/datadir/${key}.json`)
           expect(JSON.parse(leafContents)).toEqual(data.data[key])
         }
