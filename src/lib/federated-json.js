@@ -246,6 +246,12 @@ const processLinkSpec = (lnkSpec, data) => {
   return { finalRef, source, keyName, penultimateRef, finalKey }
 }
 
+const shallowCopy = (input) => Array.isArray(input)
+  ? input.slice()
+  : typeof input === 'object' && input !== null
+    ? Object.assign({}, input)
+  : input
+
 const processJSONPath = ({ path, data, preserveOriginal }) => {
   if (!path) {
     throw new Error("No 'dataPath' specified for mount spec mount point.")
@@ -253,14 +259,18 @@ const processJSONPath = ({ path, data, preserveOriginal }) => {
   const pathTrail = path.split('.')
   pathTrail.shift()
   const finalKey = pathTrail.pop()
-  const newData = preserveOriginal ? Object.assign({}, data) : data
+  const newData = preserveOriginal ? shallowCopy(data) : data
 
   let penultimateRef = newData // not necessarily penultimate yet, but will be...
   for (const key of pathTrail) {
     if (preserveOriginal) {
-      penultimateRef = Object.assign({}, penultimateRef)
+      const result = shallowCopy(penultimateRef[key])
+      penultimateRef[key] = result
+      penultimateRef = result
     }
-    penultimateRef = penultimateRef[key]
+    else {
+      penultimateRef = penultimateRef[key]
+    }
   }
 
   return {

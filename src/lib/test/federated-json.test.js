@@ -282,6 +282,13 @@ describe('writeFJSON', () => {
     expect(preRootStat).toEqual(postRootStat)
     expect(preFooStat.mtimeNs).toBeLessThan(postFooStat.mtimeNs)
     expect(preBazStat.mtimeNs).toBeLessThan(postBazStat.mtimeNs)
+
+    const bazContents = fs.readFileSync(`${testStagingDataPath}/baz.json`)
+    expect(JSON.parse(bazContents)).toEqual(data.foo.bar.baz)
+
+    const fooBarContents = fs.readFileSync(`${testStagingDataPath}/foo-bar.json`)
+    data.foo.bar.baz = null
+    expect(JSON.parse(fooBarContents)).toEqual(data.foo.bar)
   })
 
   test('will write to meta source when prsent', () => {
