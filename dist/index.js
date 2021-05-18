@@ -425,7 +425,7 @@ var writeFJSON = function writeFJSON(_ref2) {
               data: subData[subKey],
               filePath: path.join(dataDir, "".concat(subKey, ".json")),
               saveFrom: saveFrom,
-              jsonPathToSelf: updatejsonPathToSelf(dataPath, jsonPathToSelf)
+              jsonPathToSelf: updatejsonPathToSelf("".concat(dataPath, ".").concat(subKey), jsonPathToSelf)
             });
           }
         }
@@ -572,6 +572,10 @@ var processLinkSpec = function processLinkSpec(lnkSpec, data) {
   };
 };
 
+var shallowCopy = function shallowCopy(input) {
+  return Array.isArray(input) ? input.slice() : _typeof_1(input) === 'object' && input !== null ? Object.assign({}, input) : input;
+};
+
 var processJSONPath = function processJSONPath(_ref4) {
   var path = _ref4.path,
       data = _ref4.data,
@@ -584,7 +588,7 @@ var processJSONPath = function processJSONPath(_ref4) {
   var pathTrail = path.split('.');
   pathTrail.shift();
   var finalKey = pathTrail.pop();
-  var newData = preserveOriginal ? Object.assign({}, data) : data;
+  var newData = preserveOriginal ? shallowCopy(data) : data;
   var penultimateRef = newData; // not necessarily penultimate yet, but will be...
 
   var _iterator5 = _createForOfIteratorHelper$1(pathTrail),
@@ -595,10 +599,12 @@ var processJSONPath = function processJSONPath(_ref4) {
       var key = _step5.value;
 
       if (preserveOriginal) {
-        penultimateRef = Object.assign({}, penultimateRef);
+        var result = shallowCopy(penultimateRef[key]);
+        penultimateRef[key] = result;
+        penultimateRef = result;
+      } else {
+        penultimateRef = penultimateRef[key];
       }
-
-      penultimateRef = penultimateRef[key];
     }
   } catch (err) {
     _iterator5.e(err);
