@@ -1,0 +1,11 @@
+{
+  "_meta": {
+    "com.liquid-labs.federated-json": {
+      "mountSpecs": [
+        { "dataPath": "", "dataFile": "somefile.json" }
+      ]
+    }
+  },
+  "foo": [ "bar", "baz" ],
+  "source": null
+}

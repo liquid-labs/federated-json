@@ -90,34 +90,82 @@ var replaceRE = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g;
 var envTemplateString = function envTemplateString(path) {
   var origPath = path; // used for error messages
 
-  var matches = toConsumableArray(path.matchAll(replaceRE));
+  var matches; // A replaced var may itself reference vars, so we keep processing until everything is resolved.
 
-  matches.reverse(); // The reverse allows us to use the start and end indexes without messing up the string.
+  while ((matches = toConsumableArray(path.matchAll(replaceRE))).length > 0) {
+    // const matches = [...path.matchAll(replaceRE)]
+    matches.reverse(); // The reverse allows us to use the start and end indexes without messing up the string.
 
-  var _iterator = _createForOfIteratorHelper(matches),
-      _step;
+    var _iterator = _createForOfIteratorHelper(matches),
+        _step;
 
-  try {
-    for (_iterator.s(); !(_step = _iterator.n()).done;) {
-      var matchInfo = _step.value;
-      var match = matchInfo[0];
-      var key = matchInfo[1];
-      var value = process.env[key];
-      var matchStart = matchInfo.index;
+    try {
+      for (_iterator.s(); !(_step = _iterator.n()).done;) {
+        var matchInfo = _step.value;
+        var match = matchInfo[0];
+        var key = matchInfo[1];
+        var value = process.env[key];
+        var matchStart = matchInfo.index;
 
-      if (value === undefined) {
-        throw new Error("No such environment parameter '".concat(key, "' found in path replacement: '").concat(origPath, "'."));
+        if (value === undefined) {
+          throw new Error("No such environment parameter '".concat(key, "' found in path replacement: '").concat(origPath, "'."));
+        }
+
+        path = path.substring(0, matchStart) + value + path.substring(matchStart + match.length);
       }
-
-      path = path.substring(0, matchStart) + value + path.substring(matchStart + match.length);
+    } catch (err) {
+      _iterator.e(err);
+    } finally {
+      _iterator.f();
     }
-  } catch (err) {
-    _iterator.e(err);
-  } finally {
-    _iterator.f();
   }
 
   return path;
+};
+/**
+* Returns true if pathA is on pathB. I.e., if pathB is or under pathA. E.g.:
+* - ('.', '.foo') => true
+* - ('.foo', '.') => false
+* - ('.foo', '.foo') => true
+*
+* Note, this function assumes the paths are valid JSON paths.
+*/
+
+
+var testJsonPaths = function testJsonPaths(pathA, pathB) {
+  if (typeof pathA !== 'string' && !(pathA instanceof String) || typeof pathB !== 'string' && !(pathB instanceof String)) {
+    throw new Error("Unexpected non-string input: '".concat(pathA, "', '").concat(pathB, "'"));
+  }
+
+  var pathABits = pathA.split('.');
+  var pathBBits = pathB.split('.');
+
+  if (pathABits.length > pathBBits.length) {
+    return false;
+  }
+
+  while (pathABits[0] === '') {
+    pathABits.shift();
+  }
+
+  while (pathBBits[0] === '') {
+    pathBBits.shift();
+  }
+
+  if (pathABits.length > pathBBits.length) {
+    return false;
+  }
+
+  while (pathABits.length > 0) {
+    var aBit = pathABits.shift();
+    var bBit = pathBBits.shift();
+
+    if (bBit !== aBit) {
+      return false;
+    }
+  }
+
+  return true;
 };
 
 function _createForOfIteratorHelper$1(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray$2(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
@@ -197,7 +245,10 @@ var readFJSON = function readFJSON(filePath, options) {
     for (_iterator.s(); !(_step = _iterator.n()).done;) {
       var mntSpec = _step.value;
 
-      var _processMountSpec = processMountSpec(mntSpec, data),
+      var _processMountSpec = processMountSpec({
+        mntSpec: mntSpec,
+        data: data
+      }),
           dataFile = _processMountSpec.dataFile,
           dataDir = _processMountSpec.dataDir,
           mountPoint = _processMountSpec.mountPoint,
@@ -308,13 +359,20 @@ var setSource = function setSource(data, filePath) {
 */
 
 
-var writeFJSON = function writeFJSON(data, filePath) {
+var writeFJSON = function writeFJSON(_ref2) {
+  var data = _ref2.data,
+      filePath = _ref2.filePath,
+      saveFrom = _ref2.saveFrom,
+      jsonPathToSelf = _ref2.jsonPathToSelf;
+
   if (filePath === undefined) {
     var myMeta = getMyMeta(data);
     filePath = myMeta && myMeta.sourceFile;
   }
 
-  if (!filePath) {
+  var doSave = saveFrom === undefined || jsonPathToSelf && testJsonPaths(saveFrom, jsonPathToSelf);
+
+  if (doSave && !filePath) {
     throw new Error('No explicit filePath provided and no source found in object meta data.');
   }
 
@@ -328,17 +386,29 @@ var writeFJSON = function writeFJSON(data, filePath) {
       for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
         var mntSpec = _step4.value;
 
-        var _processMountSpec2 = processMountSpec(mntSpec, data),
+        var _processMountSpec2 = processMountSpec({
+          mntSpec: mntSpec,
+          data: data,
+          preserveOriginal: true
+        }),
             dataFile = _processMountSpec2.dataFile,
             dataDir = _processMountSpec2.dataDir,
+            dataPath = _processMountSpec2.dataPath,
             mountPoint = _processMountSpec2.mountPoint,
-            finalKey = _processMountSpec2.finalKey;
+            finalKey = _processMountSpec2.finalKey,
+            newData = _processMountSpec2.newData;
 
+        data = newData;
         var subData = mountPoint[finalKey];
-        mountPoint[finalKey] = null;
+        mountPoint[finalKey] = null; // What's our save scheme? Single data file, or a scan dir?
 
         if (dataFile) {
-          writeFJSON(subData, dataFile);
+          writeFJSON({
+            data: subData,
+            filePath: dataFile,
+            saveFrom: saveFrom,
+            jsonPathToSelf: updatejsonPathToSelf(dataPath, jsonPathToSelf)
+          });
         } else {
           // processMountSpec will raise an exception if neither dataFile nor dataDir is defined.
           // We don't bother to test what 'dataDir' is. If it exists, we won't overwrite, so the subsequent attempt to
@@ -347,7 +417,12 @@ var writeFJSON = function writeFJSON(data, filePath) {
 
           for (var _i2 = 0, _Object$keys2 = Object.keys(subData); _i2 < _Object$keys2.length; _i2++) {
             var subKey = _Object$keys2[_i2];
-            writeFJSON(subData[subKey], join(dataDir, "".concat(subKey, ".json")));
+            writeFJSON({
+              data: subData[subKey],
+              filePath: join(dataDir, "".concat(subKey, ".json")),
+              saveFrom: saveFrom,
+              jsonPathToSelf: updatejsonPathToSelf("".concat(dataPath, ".").concat(subKey), jsonPathToSelf)
+            });
           }
         }
       }
@@ -358,9 +433,11 @@ var writeFJSON = function writeFJSON(data, filePath) {
     }
   }
 
-  var dataString = JSON.stringify(data);
-  var processedPath = envTemplateString(filePath);
-  writeFileSync(processedPath, dataString);
+  if (doSave) {
+    var dataString = JSON.stringify(data, null, '  ');
+    var processedPath = envTemplateString(filePath);
+    writeFileSync(processedPath, dataString);
+  }
 };
 
 var getMyMeta = function getMyMeta(data) {
@@ -385,6 +462,19 @@ var ensureMyMeta = function ensureMyMeta(data) {
   return myMeta;
 };
 /**
+* Updates (by returning) the new dynamic path given the current data path (relative to a data mount or link point) and
+* previous dynamic path.
+*/
+
+
+var updatejsonPathToSelf = function updatejsonPathToSelf(jsonMountPath, jsonPathToSelf) {
+  if (jsonMountPath !== undefined) {
+    return jsonPathToSelf === undefined ? jsonMountPath : "".concat(jsonPathToSelf).concat(jsonMountPath);
+  } else {
+    return undefined;
+  }
+};
+/**
 * Internal function to test for and extract mount specs from the provided JSON object.
 */
 
@@ -399,7 +489,10 @@ var getMountSpecs = function getMountSpecs(data) {
 */
 
 
-var processMountSpec = function processMountSpec(mntSpec, data) {
+var processMountSpec = function processMountSpec(_ref3) {
+  var mntSpec = _ref3.mntSpec,
+      data = _ref3.data,
+      preserveOriginal = _ref3.preserveOriginal;
   var dataPath = mntSpec.dataPath,
       dataFile = mntSpec.dataFile,
       dataDir = mntSpec.dataDir;
@@ -414,15 +507,22 @@ var processMountSpec = function processMountSpec(mntSpec, data) {
   dataFile && (dataFile = envTemplateString(dataFile));
   dataDir && (dataDir = envTemplateString(dataDir));
 
-  var _processJSONPath = processJSONPath(dataPath, data),
+  var _processJSONPath = processJSONPath({
+    path: dataPath,
+    data: data,
+    preserveOriginal: preserveOriginal
+  }),
       mountPoint = _processJSONPath.penultimateRef,
-      finalKey = _processJSONPath.finalKey;
+      finalKey = _processJSONPath.finalKey,
+      newData = _processJSONPath.newData;
 
   return {
     dataFile: dataFile,
     dataDir: dataDir,
+    dataPath: dataPath,
     mountPoint: mountPoint,
-    finalKey: finalKey
+    finalKey: finalKey,
+    newData: newData
   };
 };
 /**
@@ -445,12 +545,18 @@ var processLinkSpec = function processLinkSpec(lnkSpec, data) {
       linkTo = lnkSpec.linkTo,
       keyName = lnkSpec.linkKey;
 
-  var _processJSONPath2 = processJSONPath(linkRefs, data),
+  var _processJSONPath2 = processJSONPath({
+    path: linkRefs,
+    data: data
+  }),
       finalRef = _processJSONPath2.finalRef,
       penultimateRef = _processJSONPath2.penultimateRef,
       finalKey = _processJSONPath2.finalKey;
 
-  var _processJSONPath3 = processJSONPath(linkTo, data),
+  var _processJSONPath3 = processJSONPath({
+    path: linkTo,
+    data: data
+  }),
       source = _processJSONPath3.finalRef;
 
   return {
@@ -462,15 +568,24 @@ var processLinkSpec = function processLinkSpec(lnkSpec, data) {
   };
 };
 
-var processJSONPath = function processJSONPath(path, data) {
-  var pathTrail = path.split('/');
-  var finalKey = pathTrail.pop();
+var shallowCopy = function shallowCopy(input) {
+  return Array.isArray(input) ? input.slice() : _typeof_1(input) === 'object' && input !== null ? Object.assign({}, input) : input;
+};
 
-  if (finalKey === undefined) {
-    throw new Error('Path must specify at least one key.');
+var processJSONPath = function processJSONPath(_ref4) {
+  var path = _ref4.path,
+      data = _ref4.data,
+      preserveOriginal = _ref4.preserveOriginal;
+
+  if (!path) {
+    throw new Error("No 'dataPath' specified for mount spec mount point.");
   }
 
-  var penultimateRef = data; // not necessarily penultimate yet, but will be...
+  var pathTrail = path.split('.');
+  pathTrail.shift();
+  var finalKey = pathTrail.pop();
+  var newData = preserveOriginal ? shallowCopy(data) : data;
+  var penultimateRef = newData; // not necessarily penultimate yet, but will be...
 
   var _iterator5 = _createForOfIteratorHelper$1(pathTrail),
       _step5;
@@ -478,7 +593,14 @@ var processJSONPath = function processJSONPath(path, data) {
   try {
     for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
       var key = _step5.value;
-      penultimateRef = penultimateRef[key];
+
+      if (preserveOriginal) {
+        var result = shallowCopy(penultimateRef[key]);
+        penultimateRef[key] = result;
+        penultimateRef = result;
+      } else {
+        penultimateRef = penultimateRef[key];
+      }
     }
   } catch (err) {
     _iterator5.e(err);
@@ -489,7 +611,8 @@ var processJSONPath = function processJSONPath(path, data) {
   return {
     finalRef: penultimateRef[finalKey],
     penultimateRef: penultimateRef,
-    finalKey: finalKey
+    finalKey: finalKey,
+    newData: newData
   };
 }; // aliases for 'import * as fjson; fjson.write()' style
 

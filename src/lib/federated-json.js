@@ -7,7 +7,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 
-import { envTemplateString } from './utils'
+import { envTemplateString, testJsonPaths } from './utils'
 
 const FJSON_META_DATA_KEY = 'com.liquid-labs.federated-json'
 
@@ -66,7 +66,7 @@ const readFJSON = (filePath, options) => {
   }
 
   for (const mntSpec of getMountSpecs(data) || []) {
-    const { dataFile, dataDir, mountPoint, finalKey } = processMountSpec(mntSpec, data)
+    const { dataFile, dataDir, mountPoint, finalKey } = processMountSpec({ mntSpec, data })
     if (dataFile) {
       const subData = readFJSON(dataFile)
 
@@ -124,24 +124,34 @@ const setSource = (data, filePath) => {
 * Writes a standard or federated JSON file by analysing the objects meta data and breaking the saved files up
 * accourding to the configuration.
 */
-const writeFJSON = (data, filePath) => {
+const writeFJSON = ({ data, filePath, saveFrom, jsonPathToSelf }) => {
   if (filePath === undefined) {
     const myMeta = getMyMeta(data)
     filePath = myMeta && myMeta.sourceFile
   }
-  if (!filePath) {
+
+  const doSave = saveFrom === undefined || (jsonPathToSelf && testJsonPaths(saveFrom, jsonPathToSelf))
+  if (doSave && !filePath) {
     throw new Error('No explicit filePath provided and no source found in object meta data.')
   }
 
   const mountSpecs = getMountSpecs(data)
   if (mountSpecs) {
     for (const mntSpec of mountSpecs) {
-      const { dataFile, dataDir, mountPoint, finalKey } = processMountSpec(mntSpec, data)
+      const { dataFile, dataDir, dataPath, mountPoint, finalKey, newData } =
+        processMountSpec({ mntSpec, data, preserveOriginal : true })
+      data = newData
 
       const subData = mountPoint[finalKey]
       mountPoint[finalKey] = null
+      // What's our save scheme? Single data file, or a scan dir?
       if (dataFile) {
-        writeFJSON(subData, dataFile)
+        writeFJSON({
+          data           : subData,
+          filePath       : dataFile,
+          saveFrom,
+          jsonPathToSelf : updatejsonPathToSelf(dataPath, jsonPathToSelf)
+        })
       }
       else { // processMountSpec will raise an exception if neither dataFile nor dataDir is defined.
         // We don't bother to test what 'dataDir' is. If it exists, we won't overwrite, so the subsequent attempt to
@@ -149,15 +159,22 @@ const writeFJSON = (data, filePath) => {
         fs.existsSync(dataDir) || fs.mkdirSync(dataDir)
 
         for (const subKey of Object.keys(subData)) {
-          writeFJSON(subData[subKey], path.join(dataDir, `${subKey}.json`))
+          writeFJSON({
+            data           : subData[subKey],
+            filePath       : path.join(dataDir, `${subKey}.json`),
+            saveFrom,
+            jsonPathToSelf : updatejsonPathToSelf(`${dataPath}.${subKey}`, jsonPathToSelf)
+          })
         }
       }
     }
   }
 
-  const dataString = JSON.stringify(data)
-  const processedPath = envTemplateString(filePath)
-  fs.writeFileSync(processedPath, dataString)
+  if (doSave) {
+    const dataString = JSON.stringify(data, null, '  ')
+    const processedPath = envTemplateString(filePath)
+    fs.writeFileSync(processedPath, dataString)
+  }
 }
 
 const getMyMeta = (data) => data._meta && data._meta[FJSON_META_DATA_KEY]
@@ -174,6 +191,21 @@ const ensureMyMeta = (data) => {
 }
 
 /**
+* Updates (by returning) the new dynamic path given the current data path (relative to a data mount or link point) and
+* previous dynamic path.
+*/
+const updatejsonPathToSelf = (jsonMountPath, jsonPathToSelf) => {
+  if (jsonMountPath !== undefined) {
+    return jsonPathToSelf === undefined
+      ? jsonMountPath
+      : `${jsonPathToSelf}${jsonMountPath}`
+  }
+  else {
+    return undefined
+  }
+}
+
+/**
 * Internal function to test for and extract mount specs from the provided JSON object.
 */
 const getMountSpecs = (data) => getMyMeta(data)?.mountSpecs
@@ -181,7 +213,7 @@ const getMountSpecs = (data) => getMyMeta(data)?.mountSpecs
 /**
 * Internal function to process a mount spec into useful components utilized by the `readFJSON` and `writeFJSON`.
 */
-const processMountSpec = (mntSpec, data) => {
+const processMountSpec = ({ mntSpec, data, preserveOriginal }) => {
   let { dataPath, dataFile, dataDir } = mntSpec
 
   dataFile && dataDir // eslint-disable-line no-unused-expressions
@@ -192,9 +224,9 @@ const processMountSpec = (mntSpec, data) => {
   dataFile && (dataFile = envTemplateString(dataFile))
   dataDir && (dataDir = envTemplateString(dataDir))
 
-  const { penultimateRef: mountPoint, finalKey } = processJSONPath(dataPath, data)
+  const { penultimateRef: mountPoint, finalKey, newData } = processJSONPath({ path : dataPath, data, preserveOriginal })
 
-  return { dataFile, dataDir, mountPoint, finalKey }
+  return { dataFile, dataDir, dataPath, mountPoint, finalKey, newData }
 }
 
 /**
@@ -208,28 +240,44 @@ const getLinkSpecs = (data) => getMyMeta(data)?.linkSpecs
 const processLinkSpec = (lnkSpec, data) => {
   const { linkRefs, linkTo, linkKey: keyName } = lnkSpec
 
-  const { finalRef, penultimateRef, finalKey } = processJSONPath(linkRefs, data)
-  const { finalRef: source } = processJSONPath(linkTo, data)
+  const { finalRef, penultimateRef, finalKey } = processJSONPath({ path : linkRefs, data })
+  const { finalRef: source } = processJSONPath({ path : linkTo, data })
 
   return { finalRef, source, keyName, penultimateRef, finalKey }
 }
 
-const processJSONPath = (path, data) => {
-  const pathTrail = path.split('/')
-  const finalKey = pathTrail.pop()
-  if (finalKey === undefined) {
-    throw new Error('Path must specify at least one key.')
-  }
+const shallowCopy = (input) => Array.isArray(input)
+  ? input.slice()
+  : typeof input === 'object' && input !== null
+    ? Object.assign({}, input)
+  : input
 
-  let penultimateRef = data // not necessarily penultimate yet, but will be...
+const processJSONPath = ({ path, data, preserveOriginal }) => {
+  if (!path) {
+    throw new Error("No 'dataPath' specified for mount spec mount point.")
+  }
+  const pathTrail = path.split('.')
+  pathTrail.shift()
+  const finalKey = pathTrail.pop()
+  const newData = preserveOriginal ? shallowCopy(data) : data
+
+  let penultimateRef = newData // not necessarily penultimate yet, but will be...
   for (const key of pathTrail) {
-    penultimateRef = penultimateRef[key]
+    if (preserveOriginal) {
+      const result = shallowCopy(penultimateRef[key])
+      penultimateRef[key] = result
+      penultimateRef = result
+    }
+    else {
+      penultimateRef = penultimateRef[key]
+    }
   }
 
   return {
     finalRef : penultimateRef[finalKey],
     penultimateRef,
-    finalKey
+    finalKey,
+    newData
   }
 }
 
