@@ -261,34 +261,70 @@ describe('writeFJSON', () => {
     })
   })
 
-  test('supports partial branch writes', () => {
+  describe('supports partial branch writes', () => {
     const testStagingDataPath = `${__dirname}/data`
-    // TODO: In theory, it would be better to start form 'expectedRootObject', but we should turn that into a function to isolate instances from cross-pollution
-    const dataFile = `${testStagingDataPath}/root-object.json`
-    const data = readFJSON(dataFile, { rememberSource : true })
 
-    const preRootStat = fs.statSync(dataFile, { bigint : true })
-    const preFooStat = fs.statSync(`${testStagingDataPath}/foo-bar.json`, { bigint : true })
-    const preBazStat = fs.statSync(`${testStagingDataPath}/baz.json`, { bigint : true })
+    test('to mounted files', () => {
+      // TODO: In theory, it would be better to start form 'expectedRootObject', but we should turn that into a function to isolate instances from cross-pollution
+      const dataFile = `${testStagingDataPath}/root-object.json`
+      const data = readFJSON(dataFile, { rememberSource : true })
 
-    data.foo.bar['another key'] = "I'm a new value!"
-    data.foo.bar.baz = ['I am no longer', 'just a string']
-    writeFJSON({ data, saveFrom : '.foo' })
+      const preRootStat = fs.statSync(dataFile, { bigint : true })
+      const preFooStat = fs.statSync(`${testStagingDataPath}/foo-bar.json`, { bigint : true })
+      const preBazStat = fs.statSync(`${testStagingDataPath}/baz.json`, { bigint : true })
 
-    const postRootStat = fs.statSync(dataFile, { bigint : true })
-    const postFooStat = fs.statSync(`${testStagingDataPath}/foo-bar.json`, { bigint : true })
-    const postBazStat = fs.statSync(`${testStagingDataPath}/baz.json`, { bigint : true })
+      data.foo.bar['another key'] = "I'm a new value!"
+      data.foo.bar.baz = ['I am no longer', 'just a string']
+      writeFJSON({ data, saveFrom : '.foo' })
 
-    expect(preRootStat).toEqual(postRootStat)
-    expect(preFooStat.mtimeNs).toBeLessThan(postFooStat.mtimeNs)
-    expect(preBazStat.mtimeNs).toBeLessThan(postBazStat.mtimeNs)
+      const postRootStat = fs.statSync(dataFile, { bigint : true })
+      const postFooStat = fs.statSync(`${testStagingDataPath}/foo-bar.json`, { bigint : true })
+      const postBazStat = fs.statSync(`${testStagingDataPath}/baz.json`, { bigint : true })
 
-    const bazContents = fs.readFileSync(`${testStagingDataPath}/baz.json`)
-    expect(JSON.parse(bazContents)).toEqual(data.foo.bar.baz)
+      expect(preRootStat).toEqual(postRootStat)
+      expect(preFooStat.mtimeNs).toBeLessThan(postFooStat.mtimeNs)
+      expect(preBazStat.mtimeNs).toBeLessThan(postBazStat.mtimeNs)
 
-    const fooBarContents = fs.readFileSync(`${testStagingDataPath}/foo-bar.json`)
-    data.foo.bar.baz = null
-    expect(JSON.parse(fooBarContents)).toEqual(data.foo.bar)
+      const bazContents = fs.readFileSync(`${testStagingDataPath}/baz.json`)
+      expect(JSON.parse(bazContents)).toEqual(data.foo.bar.baz)
+
+      const fooBarContents = fs.readFileSync(`${testStagingDataPath}/foo-bar.json`)
+      data.foo.bar.baz = null
+      expect(JSON.parse(fooBarContents)).toEqual(data.foo.bar)
+    })
+
+    test('to whole mounted directories', () => {
+      // TODO: In theory, it would be better to start form 'expectedRootObject', but we should turn that into a function to isolate instances from cross-pollution
+      const dataFile = `${testStagingDataPath}/data-dir.json`
+      const data = readFJSON(dataFile, { rememberSource : true })
+
+      const loadStats = (target) => {
+        for (const subKey of ['foo', 'bar', 'baz']) {
+          target[subKey] = fs.statSync(`${testStagingDataPath}/datadir/${subKey}.json`, { bigint : true })
+        }
+      }
+
+      const preRootStat = fs.statSync(`${testStagingDataPath}/data-dir.json`, { bigint : true })
+      const preStats = {}
+      loadStats(preStats)
+
+      data.data.foo = "new foo"
+      data.data.baz['more stuff'] = 'More stuff'
+      data.data.bar.push(4)
+
+      writeFJSON({ data, saveFrom : '.data' })
+
+      const postRootStat = fs.statSync(`${testStagingDataPath}/data-dir.json`, { bigint : true })
+      const postStats = {}
+      loadStats(postStats)
+
+      expect(preRootStat).toEqual(postRootStat)
+      for (const key in preStats) {
+        expect(preStats[key].mtimeNs).toBeLessThan(postStats[key].mtimeNs)
+        const leafContents = fs.readFileSync(`${testStagingDataPath}/datadir/${key}.json`)
+        expect(JSON.parse(leafContents)).toEqual(data.data[key])
+      }
+    })
   })
 
   test('will write to meta source when prsent', () => {
