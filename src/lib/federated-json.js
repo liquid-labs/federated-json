@@ -139,7 +139,7 @@ const writeFJSON = ({ data, filePath, saveFrom, jsonPathToSelf }) => {
   if (mountSpecs) {
     for (const mntSpec of mountSpecs) {
       const { dataFile, dataDir, dataPath, mountPoint, finalKey, newData } =
-        processMountSpec({ mntSpec, data, preserveOriginal: true })
+        processMountSpec({ mntSpec, data, preserveOriginal : true })
       data = newData
 
       const subData = mountPoint[finalKey]
@@ -147,10 +147,10 @@ const writeFJSON = ({ data, filePath, saveFrom, jsonPathToSelf }) => {
       // What's our save scheme? Single data file, or a scan dir?
       if (dataFile) {
         writeFJSON({
-          data: subData,
-          filePath: dataFile,
+          data           : subData,
+          filePath       : dataFile,
           saveFrom,
-          jsonPathToSelf: updatejsonPathToSelf(dataPath, jsonPathToSelf)
+          jsonPathToSelf : updatejsonPathToSelf(dataPath, jsonPathToSelf)
         })
       }
       else { // processMountSpec will raise an exception if neither dataFile nor dataDir is defined.
@@ -160,10 +160,10 @@ const writeFJSON = ({ data, filePath, saveFrom, jsonPathToSelf }) => {
 
         for (const subKey of Object.keys(subData)) {
           writeFJSON({
-            data: subData[subKey],
-            filePath: path.join(dataDir, `${subKey}.json`),
+            data           : subData[subKey],
+            filePath       : path.join(dataDir, `${subKey}.json`),
             saveFrom,
-            jsonPathToSelf: updatejsonPathToSelf(dataPath, jsonPathToSelf)
+            jsonPathToSelf : updatejsonPathToSelf(dataPath, jsonPathToSelf)
           })
         }
       }
@@ -224,7 +224,7 @@ const processMountSpec = ({ mntSpec, data, preserveOriginal }) => {
   dataFile && (dataFile = envTemplateString(dataFile))
   dataDir && (dataDir = envTemplateString(dataDir))
 
-  const { penultimateRef: mountPoint, finalKey, newData } = processJSONPath({ path: dataPath, data, preserveOriginal })
+  const { penultimateRef: mountPoint, finalKey, newData } = processJSONPath({ path : dataPath, data, preserveOriginal })
 
   return { dataFile, dataDir, dataPath, mountPoint, finalKey, newData }
 }
@@ -240,8 +240,8 @@ const getLinkSpecs = (data) => getMyMeta(data)?.linkSpecs
 const processLinkSpec = (lnkSpec, data) => {
   const { linkRefs, linkTo, linkKey: keyName } = lnkSpec
 
-  const { finalRef, penultimateRef, finalKey } = processJSONPath({ path: linkRefs, data })
-  const { finalRef: source } = processJSONPath({ path: linkTo, data })
+  const { finalRef, penultimateRef, finalKey } = processJSONPath({ path : linkRefs, data })
+  const { finalRef: source } = processJSONPath({ path : linkTo, data })
 
   return { finalRef, source, keyName, penultimateRef, finalKey }
 }

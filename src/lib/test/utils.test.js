@@ -31,8 +31,8 @@ describe('testJsonPaths', () => {
     ${'.foo'} | ${'.foo.bar'} | ${true}
     ${'.foo'} | ${'.bar'} | ${false}
     `("Path '$pathA' on path '$pathB' => result", ({ pathA, pathB, result }) => {
-    expect(testJsonPaths(pathA, pathB)).toBe(result)
-  })
+  expect(testJsonPaths(pathA, pathB)).toBe(result)
+})
 
   test.each`
     pathA | pathB
@@ -43,7 +43,7 @@ describe('testJsonPaths', () => {
     ${'.'} | ${{}}
     ${'.'} | ${[]}
     `("Inputs '$pathA' '$pathB' raise an exception", ({ pathA, pathB }) => {
-    expect(() => testJsonPaths(pathA, pathB))
-      .toThrow(new RegExp(`non-string input.*${pathA === '.' ? '\.' : pathA}.*${pathB === '.' ? '\.' : pathB}`))
-  })
+  expect(() => testJsonPaths(pathA, pathB)) // eslint-disable-next-line no-useless-escape
+    .toThrow(new RegExp(`non-string input.*${pathA === '.' ? '\.' : pathA}.*${pathB === '.' ? '\.' : pathB}`))
+})
 })

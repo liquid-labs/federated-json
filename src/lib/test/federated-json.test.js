@@ -190,7 +190,7 @@ describe('writeFJSON', () => {
   test('write {}', () => {
     const testFile = `${testDir}/empty-object.json`
     const testData = {}
-    writeFJSON({ data: testData, filePath: testFile })
+    writeFJSON({ data : testData, filePath : testFile })
     const contents = fs.readFileSync(testFile)
     expect(JSON.parse(contents)).toEqual(testData)
   })
@@ -204,7 +204,7 @@ describe('writeFJSON', () => {
       foo   : testEmbed
     }
     beforeAll(() => {
-      writeFJSON({ data: testData, filePath: rootTestFile })
+      writeFJSON({ data : testData, filePath : rootTestFile })
     })
 
     test('writes truncated root file', () => {
@@ -236,7 +236,7 @@ describe('writeFJSON', () => {
       foo   : testEmbed
     }
     beforeAll(() => {
-      writeFJSON({ data: testData, filePath: rootTestFile })
+      writeFJSON({ data : testData, filePath : rootTestFile })
     })
 
     test('writes truncated root file', () => {
@@ -261,23 +261,23 @@ describe('writeFJSON', () => {
     })
   })
 
-  test('supports partial branch writes', async () => {
+  test('supports partial branch writes', async() => {
     const testStagingDataPath = `${__dirname}/data`
     // TODO: In theory, it would be better to start form 'expectedRootObject', but we should turn that into a function to isolate instances from cross-pollution
     const dataFile = `${testStagingDataPath}/root-object.json`
     const data = readFJSON(dataFile, { rememberSource : true })
 
-    const preRootStat = fs.statSync(dataFile, { bigint: true })
-    const preFooStat = fs.statSync(`${testStagingDataPath}/foo-bar.json`, { bigint: true })
-    const preBazStat = fs.statSync(`${testStagingDataPath}/baz.json`, { bigint: true })
+    const preRootStat = fs.statSync(dataFile, { bigint : true })
+    const preFooStat = fs.statSync(`${testStagingDataPath}/foo-bar.json`, { bigint : true })
+    const preBazStat = fs.statSync(`${testStagingDataPath}/baz.json`, { bigint : true })
 
     data.foo.bar['another key'] = "I'm a new value!"
-    data.foo.bar.baz = [ 'I am no longer', 'just a string' ]
-    writeFJSON({ data, saveFrom: '.foo' })
+    data.foo.bar.baz = ['I am no longer', 'just a string']
+    writeFJSON({ data, saveFrom : '.foo' })
 
-    const postRootStat = fs.statSync(dataFile, { bigint: true })
-    const postFooStat = fs.statSync(`${testStagingDataPath}/foo-bar.json`, { bigint: true })
-    const postBazStat = fs.statSync(`${testStagingDataPath}/baz.json`, { bigint: true })
+    const postRootStat = fs.statSync(dataFile, { bigint : true })
+    const postFooStat = fs.statSync(`${testStagingDataPath}/foo-bar.json`, { bigint : true })
+    const postBazStat = fs.statSync(`${testStagingDataPath}/baz.json`, { bigint : true })
 
     expect(preRootStat).toEqual(postRootStat)
     expect(preFooStat.mtimeNs).toBeLessThan(postFooStat.mtimeNs)
@@ -288,13 +288,13 @@ describe('writeFJSON', () => {
     const testFile = `${testDir}/empty-object.json`
     const testData = {}
     setSource(testData, testFile)
-    writeFJSON({ data: testData })
+    writeFJSON({ data : testData })
     const contents = fs.readFileSync(testFile)
     expect(JSON.parse(contents)).toEqual(testData)
   })
 
   test('write fails when no target path can be discerned', () => {
     const testData = {}
-    expect(() => writeFJSON({ data: testData })).toThrow()
+    expect(() => writeFJSON({ data : testData })).toThrow()
   })
 })
