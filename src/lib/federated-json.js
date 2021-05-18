@@ -124,13 +124,13 @@ const setSource = (data, filePath) => {
 * Writes a standard or federated JSON file by analysing the objects meta data and breaking the saved files up
 * accourding to the configuration.
 */
-const writeFJSON = ({ data, filePath, savePath, dynamicPath }) => {
+const writeFJSON = ({ data, filePath, saveFrom, jsonPathToSelf }) => {
   if (filePath === undefined) {
     const myMeta = getMyMeta(data)
     filePath = myMeta && myMeta.sourceFile
   }
 
-  const doSave = savePath === undefined || (dynamicPath && testJsonPaths(savePath, dynamicPath))
+  const doSave = saveFrom === undefined || (jsonPathToSelf && testJsonPaths(saveFrom, jsonPathToSelf))
   if (doSave && !filePath) {
     throw new Error('No explicit filePath provided and no source found in object meta data.')
   }
@@ -149,8 +149,8 @@ const writeFJSON = ({ data, filePath, savePath, dynamicPath }) => {
         writeFJSON({
           data: subData,
           filePath: dataFile,
-          savePath,
-          dynamicPath: updateDynamicPath(dataPath, dynamicPath)
+          saveFrom,
+          jsonPathToSelf: updatejsonPathToSelf(dataPath, jsonPathToSelf)
         })
       }
       else { // processMountSpec will raise an exception if neither dataFile nor dataDir is defined.
@@ -162,8 +162,8 @@ const writeFJSON = ({ data, filePath, savePath, dynamicPath }) => {
           writeFJSON({
             data: subData[subKey],
             filePath: path.join(dataDir, `${subKey}.json`),
-            savePath,
-            dynamicPath: updateDynamicPath(dataPath, dynamicPath)
+            saveFrom,
+            jsonPathToSelf: updatejsonPathToSelf(dataPath, jsonPathToSelf)
           })
         }
       }
@@ -194,11 +194,11 @@ const ensureMyMeta = (data) => {
 * Updates (by returning) the new dynamic path given the current data path (relative to a data mount or link point) and
 * previous dynamic path.
 */
-const updateDynamicPath = (dataPath, dynamicPath) => {
-  if (dataPath !== undefined) {
-    return dynamicPath === undefined
-      ? dataPath
-      : `${dynamicPath}${dataPath}`
+const updatejsonPathToSelf = (jsonMountPath, jsonPathToSelf) => {
+  if (jsonMountPath !== undefined) {
+    return jsonPathToSelf === undefined
+      ? jsonMountPath
+      : `${jsonPathToSelf}${jsonMountPath}`
   }
   else {
     return undefined

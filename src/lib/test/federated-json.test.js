@@ -273,7 +273,7 @@ describe('writeFJSON', () => {
 
     data.foo.bar['another key'] = "I'm a new value!"
     data.foo.bar.baz = [ 'I am no longer', 'just a string' ]
-    writeFJSON({ data, savePath: '.foo' })
+    writeFJSON({ data, saveFrom: '.foo' })
 
     const postRootStat = fs.statSync(dataFile, { bigint: true })
     const postFooStat = fs.statSync(`${testStagingDataPath}/foo-bar.json`, { bigint: true })
