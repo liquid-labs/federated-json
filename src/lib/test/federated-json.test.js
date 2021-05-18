@@ -310,7 +310,7 @@ describe('writeFJSON', () => {
 
       test('update all leaves', () => {
         loadStats(preStats)
-        data.data.foo = "new foo"
+        data.data.foo = 'new foo'
         data.data.baz['more stuff'] = 'More stuff'
         data.data.bar.push(4)
 
@@ -321,7 +321,7 @@ describe('writeFJSON', () => {
         loadStats(postStats)
 
         expect(preRootStat).toEqual(postRootStat)
-        for (const key in preStats) {
+        for (const key of Object.keys(preStats)) {
           expect(preStats[key].mtimeNs).toBeLessThan(postStats[key].mtimeNs)
           const leafContents = fs.readFileSync(`${testStagingDataPath}/datadir/${key}.json`)
           expect(JSON.parse(leafContents)).toEqual(data.data[key])
@@ -338,7 +338,7 @@ describe('writeFJSON', () => {
         loadStats(postStats)
 
         expect(preRootStat).toEqual(postRootStat)
-        for (const key in preStats) {
+        for (const key of Object.keys(preStats)) {
           if (key === 'baz') {
             expect(preStats[key].mtimeNs).toBeLessThan(postStats[key].mtimeNs)
           }

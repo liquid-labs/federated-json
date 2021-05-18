@@ -250,7 +250,7 @@ const shallowCopy = (input) => Array.isArray(input)
   ? input.slice()
   : typeof input === 'object' && input !== null
     ? Object.assign({}, input)
-  : input
+    : input
 
 const processJSONPath = ({ path, data, preserveOriginal }) => {
   if (!path) {
