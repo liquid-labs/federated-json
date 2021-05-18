@@ -261,7 +261,7 @@ describe('writeFJSON', () => {
     })
   })
 
-  test('supports partial branch writes', async() => {
+  test('supports partial branch writes', () => {
     const testStagingDataPath = `${__dirname}/data`
     // TODO: In theory, it would be better to start form 'expectedRootObject', but we should turn that into a function to isolate instances from cross-pollution
     const dataFile = `${testStagingDataPath}/root-object.json`
