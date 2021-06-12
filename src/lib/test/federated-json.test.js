@@ -1,6 +1,7 @@
 /* global beforeAll beforeEach describe expect test */
 
 import * as fs from 'fs'
+import * as path from 'path'
 
 import { addMountPoint, FJSON_META_DATA_KEY, readFJSON, setSource, writeFJSON } from '../federated-json'
 
@@ -144,9 +145,9 @@ describe('readFJSON', () => {
     ${'fed-link-arr2arr.json/fed+linked object'} | ${testDataPath + '/fed-link-arr2arr.json'} | ${expectedFedLinkArr2Arr}
     ${'data-dir.json/scan-and-load'} | ${testDataPath + '/data-dir.json'} | ${expectedScanResult}
   `('loads $description', ({ file, expected }) => {
-  const data = readFJSON(file)
-  expect(data).toEqual(expected)
-})
+    const data = readFJSON(file)
+    expect(data).toEqual(expected)
+  })
 
   test('can remember the source', () => {
     const data = readFJSON(EMPTY_OBJ_SRC, { rememberSource : true })
@@ -262,7 +263,7 @@ describe('writeFJSON', () => {
   })
 
   describe('supports partial branch writes', () => {
-    const testStagingDataPath = `${__dirname}/data`
+    const testStagingDataPath = path.join(__dirname, 'data')
 
     test('to mounted files', () => {
       // TODO: In theory, it would be better to start form 'expectedRootObject', but we should turn that into a function to isolate instances from cross-pollution
