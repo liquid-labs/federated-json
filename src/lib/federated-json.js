@@ -43,6 +43,8 @@ const jsonRE = /\.json$/
 * files.
 */
 const readFJSON = (filePath, options) => {
+  if (!filePath) { throw new Error(`File path invalid. (${filePath})`) }
+
   const { rememberSource } = options || {}
 
   const processedPath = envTemplateString(filePath)
@@ -128,6 +130,7 @@ const writeFJSON = ({ data, filePath, saveFrom, jsonPathToSelf }) => {
   if (filePath === undefined) {
     const myMeta = getMyMeta(data)
     filePath = myMeta && myMeta.sourceFile
+    if (!filePath) { throw new Error('File was not provided and no \'meta.sourceFile\' defined (or invalid).') }
   }
 
   const doSave = saveFrom === undefined || (jsonPathToSelf && testJsonPaths(saveFrom, jsonPathToSelf))
