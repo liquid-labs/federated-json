@@ -83,22 +83,22 @@ describe('addMountPoint', () => {
   beforeEach(() => { data = { foo : { bar : true }, baz : true } })
 
   test('sets initial root mount points', () => {
-    addMountPoint(data, '.foo', './some-file.json')
+    addMountPoint({ data, path: '.foo', file: './some-file.json' })
     expect(data._meta).toEqual({
       [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', file : './some-file.json' }] }
     })
   })
 
   test('sets initial root mount points', () => {
-    addMountPoint(data, '.foo', './some-file.json')
+    addMountPoint({ data, path: '.foo', file: './some-file.json' })
     expect(data._meta).toEqual({
       [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', file : './some-file.json' }] }
     })
   })
 
   test('updates mount points', () => {
-    addMountPoint(data, '.foo', './some-file.json')
-    addMountPoint(data, '.foo', './another-file.json')
+    addMountPoint({ data, path: '.foo', file: './some-file.json' })
+    addMountPoint({ data, path: '.foo', file: './another-file.json' })
     expect(data._meta).toEqual({
       [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', file : './another-file.json' }] }
     })
@@ -111,19 +111,19 @@ describe('addMountPoint', () => {
     setSource(data, './our-file.json')
     expect(data._meta).toEqual(metaModel)
 
-    addMountPoint(data, '.foo', './some-file.json')
+    addMountPoint({ data, path: '.foo', file: './some-file.json' })
     metaModel[FJSON_META_DATA_KEY].mountSpecs = [{ path : '.foo', file : './some-file.json' }]
     expect(data._meta).toEqual(metaModel)
 
-    addMountPoint(data, '.foo', './another-file.json')
+    addMountPoint({ data, path: '.foo', file: './another-file.json' })
     metaModel[FJSON_META_DATA_KEY].mountSpecs = [{ path : '.foo', file : './another-file.json' }]
     expect(data._meta).toEqual(metaModel)
   })
 
   /* TODO
   test('sets embedded mount points', () => {
-    addMountPoint(data, 'foo', './some-file.json')
-    addMountPoint(data, 'foo/bar', './another-file.json')
+    addMountPoint({ data, path: 'foo', file: './some-file.json' })
+    addMountPoint({ data, path: 'foo/bar', file: './another-file.json' })
     expect(data._meta).toEqual({
       [FJSON_META_DATA_KEY]: { "mountSpecs": [{ "path": "foo", "file": "./some-file.json"}] }
     })

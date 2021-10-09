@@ -15,7 +15,7 @@ const FJSON_META_DATA_KEY = 'com.liquid-labs.federated-json'
 * Adds or updates a mount point entry. WARNING: This method does not currently support sub-mounts. These must be
 * manually updated by accessing the sub-data structure and modifying it's mount points directly.
 */
-const addMountPoint = (data, path, file) => {
+const addMountPoint = ({ data, path, file }) => {
   let mountSpecs = getMountSpecs(data)
 
   if (mountSpecs === undefined) {

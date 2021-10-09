@@ -28,8 +28,8 @@ import * as fjson from '@liquid-labs/federated-json'
 
 const data = fjson.readFJSON('./data.json')
 
-fjson.addMountPoint(data, 'foo/bar', '${HOME}/.foo/foo-bar.json')
-fjson.addMountPoint(data, 'foo/bar/baz', '${HOME}/.foo/foo-bar-baz.json')
+fjson.addMountPoint({ data, path: 'foo/bar', file: '${HOME}/.foo/foo-bar.json' })
+fjson.addMountPoint({ data, path: 'foo/bar/baz', file: '${HOME}/.foo/foo-bar-baz.json' })
 
 fjson.write(data)
 ```
