@@ -1,0 +1,15 @@
+- startTimestamp: 2021-10-08T15:00:56.184Z
+  startEpochMillis: 1633705256184
+  issues:
+    - https://github.com/Liquid-Labs/federated-json/issues/3
+  branch: 2021.10.08-zane@liquid-labs.com-finish_linking_support
+  branchFrom: a34c274ac06128388fe748ed1465b29ab7079ae2
+  workInitiator: zane@liquid-labs.com
+  branchInitiator: zane@liquid-labs.com
+  involvedProjects:
+    - "@liquid-labs/federated-json"
+  changeNotes:
+    - Finish linking support
+  securityNotes: []
+  drpBcpNotes: []
+  backoutNotes: []
