@@ -43,10 +43,10 @@ const jsonRE = /\.json$/
 * files.
 */
 const readFJSON = (...args) => {
-  let filePath, rememberSource
+  let file, rememberSource
   if (!args || args.length === 0) throw new Error("Invalid 'no argument' call to readJSON.")
   else if (typeof args[0] === 'string') {
-    filePath = args[0]
+    file = args[0]
     if (args.length === 2) {
       if (typeof args[1] === 'object') ({ rememberSource } = args[1]);
       else throw new Error("Unexpected second argument to readJSON; expects options object.")
@@ -55,11 +55,11 @@ const readFJSON = (...args) => {
       throw new Error("Invalid call to readFJSON; try expects (string, options) or (options).")
   }
   
-  if (!filePath) { throw new Error(`File path invalid. (${filePath})`) }
+  if (!file) { throw new Error(`File path invalid. (${file})`) }
 
-  const processedPath = envTemplateString(filePath)
+  const processedPath = envTemplateString(file)
   if (!fs.existsSync(processedPath)) {
-    const msg = `No such file: '${filePath}'` + (filePath !== processedPath ? ` ('${processedPath}')` : '')
+    const msg = `No such file: '${file}'` + (file !== processedPath ? ` ('${processedPath}')` : '')
     throw new Error(msg)
   }
   const dataBits = fs.readFileSync(processedPath)
@@ -69,12 +69,12 @@ const readFJSON = (...args) => {
   }
   catch (e) {
     if (e instanceof SyntaxError) {
-      throw new SyntaxError(`${e.message} while processing ${filePath}`)
+      throw new SyntaxError(`${e.message} while processing ${file}`)
     }
   }
 
   if (rememberSource === true) {
-    setSource({ data, file: filePath })
+    setSource({ data, file: file })
   }
 
   for (const mntSpec of getMountSpecs(data) || []) {
@@ -136,16 +136,16 @@ const setSource = ({ data, file }) => {
 * Writes a standard or federated JSON file by analysing the objects meta data and breaking the saved files up
 * accourding to the configuration.
 */
-const writeFJSON = ({ data, filePath, saveFrom, jsonPathToSelf }) => {
-  if (filePath === undefined) {
+const writeFJSON = ({ data, file, saveFrom, jsonPathToSelf }) => {
+  if (file === undefined) {
     const myMeta = getMyMeta(data)
-    filePath = myMeta && myMeta.sourceFile
-    if (!filePath) { throw new Error('File was not provided and no \'meta.sourceFile\' defined (or invalid).') }
+    file = myMeta && myMeta.sourceFile
+    if (!file) { throw new Error('File was not provided and no \'meta.sourceFile\' defined (or invalid).') }
   }
 
   const doSave = saveFrom === undefined || (jsonPathToSelf && testJsonPaths(saveFrom, jsonPathToSelf))
-  if (doSave && !filePath) {
-    throw new Error('No explicit filePath provided and no source found in object meta data.')
+  if (doSave && !file) {
+    throw new Error('No explicit file provided and no source found in object meta data.')
   }
 
   const mountSpecs = getMountSpecs(data)
@@ -161,7 +161,7 @@ const writeFJSON = ({ data, filePath, saveFrom, jsonPathToSelf }) => {
       if (file) {
         writeFJSON({
           data           : subData,
-          filePath       : file,
+          file       : file,
           saveFrom,
           jsonPathToSelf : updatejsonPathToSelf(path, jsonPathToSelf)
         })
@@ -174,7 +174,7 @@ const writeFJSON = ({ data, filePath, saveFrom, jsonPathToSelf }) => {
         for (const subKey of Object.keys(subData)) {
           writeFJSON({
             data           : subData[subKey],
-            filePath       : fsPath.join(dir, `${subKey}.json`),
+            file       : fsPath.join(dir, `${subKey}.json`),
             saveFrom,
             jsonPathToSelf : updatejsonPathToSelf(`${path}.${subKey}`, jsonPathToSelf)
           })
@@ -185,7 +185,7 @@ const writeFJSON = ({ data, filePath, saveFrom, jsonPathToSelf }) => {
 
   if (doSave) {
     const dataString = JSON.stringify(data, null, '  ')
-    const processedPath = envTemplateString(filePath)
+    const processedPath = envTemplateString(file)
     fs.writeFileSync(processedPath, dataString)
   }
 }

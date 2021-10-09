@@ -191,7 +191,7 @@ describe('writeFJSON', () => {
   test('write {}', () => {
     const testFile = `${testDir}/empty-object.json`
     const testData = {}
-    writeFJSON({ data : testData, filePath : testFile })
+    writeFJSON({ data : testData, file : testFile })
     const contents = fs.readFileSync(testFile)
     expect(JSON.parse(contents)).toEqual(testData)
   })
@@ -205,7 +205,7 @@ describe('writeFJSON', () => {
       foo   : testEmbed
     }
     beforeAll(() => {
-      writeFJSON({ data : testData, filePath : rootTestFile })
+      writeFJSON({ data : testData, file : rootTestFile })
     })
 
     test('writes truncated root file', () => {
@@ -237,7 +237,7 @@ describe('writeFJSON', () => {
       foo   : testEmbed
     }
     beforeAll(() => {
-      writeFJSON({ data : testData, filePath : rootTestFile })
+      writeFJSON({ data : testData, file : rootTestFile })
     })
 
     test('writes truncated root file', () => {
