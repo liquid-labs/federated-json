@@ -81,7 +81,7 @@ const readFJSON = (...args) => {
   }
 
   if (rememberSource === true) {
-    setSource({ data, file: file })
+    setSource({ data, file })
   }
 
   for (const mntSpec of getMountSpecs(data) || []) {
