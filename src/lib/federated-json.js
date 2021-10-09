@@ -146,7 +146,7 @@ const setSource = ({ data, file }) => {
 const writeFJSON = ({ data, file, saveFrom, jsonPathToSelf }) => {
   if (file === undefined) {
     const myMeta = getMyMeta(data)
-    file = myMeta && myMeta.sourceFile
+    file = myMeta?.sourceFile
     if (!file) { throw new Error('File was not provided and no \'meta.sourceFile\' defined (or invalid).') }
   }
 
