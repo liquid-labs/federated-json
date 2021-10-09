@@ -43,7 +43,6 @@ const jsonRE = /\.json$/
 * files.
 */
 const readFJSON = (...args) => {
-
   let filePath, rememberSource
   if (!args || args.length === 0) throw new Error("Invalid 'no argument' call to readJSON.")
   else if (typeof args[0] === 'string') {
