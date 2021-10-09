@@ -54,7 +54,6 @@ const readFJSON = (...args) => {
     else if (args.length !== 1)
       throw new Error("Invalid call to readFJSON; try expects (string, options) or (options).")
   }
-  else
   
   if (!filePath) { throw new Error(`File path invalid. (${filePath})`) }
 
