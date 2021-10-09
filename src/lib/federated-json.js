@@ -151,17 +151,17 @@ const writeFJSON = ({ data, file, saveFrom, jsonPathToSelf }) => {
   const mountSpecs = getMountSpecs(data)
   if (mountSpecs) {
     for (const mntSpec of mountSpecs) {
-      const { file, dir, path, mountPoint, finalKey, newData } =
+      const { file: specFile, dir, path, mountPoint, finalKey, newData } =
         processMountSpec({ mntSpec, data, preserveOriginal : true })
       data = newData
 
       const subData = mountPoint[finalKey]
       mountPoint[finalKey] = null
       // What's our save scheme? Single data file, or a scan dir?
-      if (file) {
+      if (specFile) {
         writeFJSON({
           data           : subData,
-          file       : file,
+          file       : specFile,
           saveFrom,
           jsonPathToSelf : updatejsonPathToSelf(path, jsonPathToSelf)
         })
