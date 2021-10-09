@@ -220,7 +220,7 @@ var FJSON_META_DATA_KEY = 'com.liquid-labs.federated-json';
 * manually updated by accessing the sub-data structure and modifying it's mount points directly.
 */
 
-var addMountPoint = function addMountPoint(data, dataPath, dataFile) {
+var addMountPoint = function addMountPoint(data, path, file) {
   var mountSpecs = getMountSpecs(data);
 
   if (mountSpecs === undefined) {
@@ -233,11 +233,11 @@ var addMountPoint = function addMountPoint(data, dataPath, dataFile) {
   }
 
   var i = mountSpecs.findIndex(function (el) {
-    return el.dataPath === dataPath;
+    return el.path === path;
   });
   var mountSpec = {
-    dataPath: dataPath,
-    dataFile: dataFile
+    path: path,
+    file: file
   };
 
   if (i !== -1) {
@@ -294,19 +294,19 @@ var readFJSON = function readFJSON(filePath, options) {
         mntSpec: mntSpec,
         data: data
       }),
-          dataFile = _processMountSpec.dataFile,
-          dataDir = _processMountSpec.dataDir,
+          file = _processMountSpec.file,
+          dir = _processMountSpec.dir,
           mountPoint = _processMountSpec.mountPoint,
           finalKey = _processMountSpec.finalKey;
 
-      if (dataFile) {
-        var subData = readFJSON(dataFile);
+      if (file) {
+        var subData = readFJSON(file);
         mountPoint[finalKey] = subData;
       } else {
-        // 'dataDir' is good because we expect processMountSpec() to raise an exception if neither specified.
+        // 'dir' is good because we expect processMountSpec() to raise an exception if neither specified.
         var mntObj = {};
         mountPoint[finalKey] = mntObj;
-        var files = fs.readdirSync(dataDir, {
+        var files = fs.readdirSync(dir, {
           withFileTypes: true
         }).filter(function (item) {
           return !item.isDirectory() && jsonRE.test(item.name);
@@ -322,7 +322,7 @@ var readFJSON = function readFJSON(filePath, options) {
             var dirFile = _step3.value;
             var mntPnt = dirFile.replace(jsonRE, '');
 
-            var _subData = readFJSON(path.join(dataDir, dirFile));
+            var _subData = readFJSON(path.join(dir, dirFile));
 
             mntObj[mntPnt] = _subData;
           }
@@ -440,9 +440,9 @@ var writeFJSON = function writeFJSON(_ref2) {
           data: data,
           preserveOriginal: true
         }),
-            dataFile = _processMountSpec2.dataFile,
-            dataDir = _processMountSpec2.dataDir,
-            dataPath = _processMountSpec2.dataPath,
+            file = _processMountSpec2.file,
+            dir = _processMountSpec2.dir,
+            path = _processMountSpec2.path,
             mountPoint = _processMountSpec2.mountPoint,
             finalKey = _processMountSpec2.finalKey,
             newData = _processMountSpec2.newData;
@@ -451,26 +451,26 @@ var writeFJSON = function writeFJSON(_ref2) {
         var subData = mountPoint[finalKey];
         mountPoint[finalKey] = null; // What's our save scheme? Single data file, or a scan dir?
 
-        if (dataFile) {
+        if (file) {
           writeFJSON({
             data: subData,
-            filePath: dataFile,
+            filePath: file,
             saveFrom: saveFrom,
-            jsonPathToSelf: updatejsonPathToSelf(dataPath, jsonPathToSelf)
+            jsonPathToSelf: updatejsonPathToSelf(path, jsonPathToSelf)
           });
         } else {
-          // processMountSpec will raise an exception if neither dataFile nor dataDir is defined.
-          // We don't bother to test what 'dataDir' is. If it exists, we won't overwrite, so the subsequent attempt to
+          // processMountSpec will raise an exception if neither file nor dir is defined.
+          // We don't bother to test what 'dir' is. If it exists, we won't overwrite, so the subsequent attempt to
           // write a file into it can just fail if it's not of an appropriate type.
-          fs.existsSync(dataDir) || fs.mkdirSync(dataDir);
+          fs.existsSync(dir) || fs.mkdirSync(dir);
 
           for (var _i2 = 0, _Object$keys2 = Object.keys(subData); _i2 < _Object$keys2.length; _i2++) {
             var subKey = _Object$keys2[_i2];
             writeFJSON({
               data: subData[subKey],
-              filePath: path.join(dataDir, "".concat(subKey, ".json")),
+              filePath: path.join(dir, "".concat(subKey, ".json")),
               saveFrom: saveFrom,
-              jsonPathToSelf: updatejsonPathToSelf("".concat(dataPath, ".").concat(subKey), jsonPathToSelf)
+              jsonPathToSelf: updatejsonPathToSelf("".concat(path, ".").concat(subKey), jsonPathToSelf)
             });
           }
         }
@@ -542,22 +542,22 @@ var processMountSpec = function processMountSpec(_ref3) {
   var mntSpec = _ref3.mntSpec,
       data = _ref3.data,
       preserveOriginal = _ref3.preserveOriginal;
-  var dataPath = mntSpec.dataPath,
-      dataFile = mntSpec.dataFile,
-      dataDir = mntSpec.dataDir;
-  dataFile && dataDir // eslint-disable-line no-unused-expressions
+  var path = mntSpec.path,
+      file = mntSpec.file,
+      dir = mntSpec.dir;
+  file && dir // eslint-disable-line no-unused-expressions
   && function (e) {
     throw e;
-  }(new Error("Bad mount spec; cannot specify both data file (".concat(dataFile, ") and directory (").concat(dataDir, ")")));
-  !dataFile && !dataDir // eslint-disable-line no-unused-expressions
+  }(new Error("Bad mount spec; cannot specify both data file (".concat(file, ") and directory (").concat(dir, ")")));
+  !file && !dir // eslint-disable-line no-unused-expressions
   && function (e) {
     throw e;
   }(new Error('Bad mount spec; neither data file nor directory.'));
-  dataFile && (dataFile = envTemplateString(dataFile));
-  dataDir && (dataDir = envTemplateString(dataDir));
+  file && (file = envTemplateString(file));
+  dir && (dir = envTemplateString(dir));
 
   var _processJSONPath = processJSONPath({
-    path: dataPath,
+    path: path,
     data: data,
     preserveOriginal: preserveOriginal
   }),
@@ -566,9 +566,9 @@ var processMountSpec = function processMountSpec(_ref3) {
       newData = _processJSONPath.newData;
 
   return {
-    dataFile: dataFile,
-    dataDir: dataDir,
-    dataPath: dataPath,
+    file: file,
+    dir: dir,
+    path: path,
     mountPoint: mountPoint,
     finalKey: finalKey,
     newData: newData
@@ -627,7 +627,7 @@ var processJSONPath = function processJSONPath(_ref4) {
       preserveOriginal = _ref4.preserveOriginal;
 
   if (!path) {
-    throw new Error("No 'dataPath' specified for mount spec mount point.");
+    throw new Error("No 'path' specified for mount spec mount point.");
   }
 
   var pathTrail = path.split('.');

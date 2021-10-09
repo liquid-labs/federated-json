@@ -2,7 +2,7 @@
   "_meta": {
     "com.liquid-labs.federated-json": {
       "mountSpecs": [
-        { "dataPath": ".data", "dataDir": "${TEST_DIR}/data/datadir" }
+        { "path": ".data", "dir": "${TEST_DIR}/data/datadir" }
       ]
     }
   },

@@ -1,11 +1,11 @@
 /**
 * Library that builds a single JSON object from multiple JSON files. As each file is loaded, we check
-* `_meta/com.liquid-labs.federated-data/mountSpecs`. Each spec consists of a `dataPath` and `dataFile` element. The
+* `_meta/com.liquid-labs.federated-data/mountSpecs`. Each spec consists of a `path` and `file` element. The
 * data path is split on '/' and each element is treated as a string. Therefore, the path is compatible with object keys
 * but does not support arrays.
 */
 import * as fs from 'fs'
-import * as path from 'path'
+import * as fsPath from 'path'
 
 import { envTemplateString, testJsonPaths } from './utils'
 
@@ -15,7 +15,7 @@ const FJSON_META_DATA_KEY = 'com.liquid-labs.federated-json'
 * Adds or updates a mount point entry. WARNING: This method does not currently support sub-mounts. These must be
 * manually updated by accessing the sub-data structure and modifying it's mount points directly.
 */
-const addMountPoint = (data, dataPath, dataFile) => {
+const addMountPoint = (data, path, file) => {
   let mountSpecs = getMountSpecs(data)
 
   if (mountSpecs === undefined) {
@@ -26,8 +26,8 @@ const addMountPoint = (data, dataPath, dataFile) => {
     }
   }
 
-  const i = mountSpecs.findIndex((el) => el.dataPath === dataPath)
-  const mountSpec = { dataPath : dataPath, dataFile }
+  const i = mountSpecs.findIndex((el) => el.path === path)
+  const mountSpec = { path : path, file }
   if (i !== -1) {
     mountSpecs[i] = mountSpec
   }
@@ -68,23 +68,23 @@ const readFJSON = (filePath, options) => {
   }
 
   for (const mntSpec of getMountSpecs(data) || []) {
-    const { dataFile, dataDir, mountPoint, finalKey } = processMountSpec({ mntSpec, data })
-    if (dataFile) {
-      const subData = readFJSON(dataFile)
+    const { file, dir, mountPoint, finalKey } = processMountSpec({ mntSpec, data })
+    if (file) {
+      const subData = readFJSON(file)
 
       mountPoint[finalKey] = subData
     }
-    else { // 'dataDir' is good because we expect processMountSpec() to raise an exception if neither specified.
+    else { // 'dir' is good because we expect processMountSpec() to raise an exception if neither specified.
       const mntObj = {}
       mountPoint[finalKey] = mntObj
 
-      const files = fs.readdirSync(dataDir, { withFileTypes : true })
+      const files = fs.readdirSync(dir, { withFileTypes : true })
         .filter(item => !item.isDirectory() && jsonRE.test(item.name))
         .map(item => item.name) // note 'name' is the simple/basename, not the whole path.
 
       for (const dirFile of files) {
         const mntPnt = dirFile.replace(jsonRE, '')
-        const subData = readFJSON(path.join(dataDir, dirFile))
+        const subData = readFJSON(fsPath.join(dir, dirFile))
         mntObj[mntPnt] = subData
       }
     }
@@ -141,32 +141,32 @@ const writeFJSON = ({ data, filePath, saveFrom, jsonPathToSelf }) => {
   const mountSpecs = getMountSpecs(data)
   if (mountSpecs) {
     for (const mntSpec of mountSpecs) {
-      const { dataFile, dataDir, dataPath, mountPoint, finalKey, newData } =
+      const { file, dir, path, mountPoint, finalKey, newData } =
         processMountSpec({ mntSpec, data, preserveOriginal : true })
       data = newData
 
       const subData = mountPoint[finalKey]
       mountPoint[finalKey] = null
       // What's our save scheme? Single data file, or a scan dir?
-      if (dataFile) {
+      if (file) {
         writeFJSON({
           data           : subData,
-          filePath       : dataFile,
+          filePath       : file,
           saveFrom,
-          jsonPathToSelf : updatejsonPathToSelf(dataPath, jsonPathToSelf)
+          jsonPathToSelf : updatejsonPathToSelf(path, jsonPathToSelf)
         })
       }
-      else { // processMountSpec will raise an exception if neither dataFile nor dataDir is defined.
-        // We don't bother to test what 'dataDir' is. If it exists, we won't overwrite, so the subsequent attempt to
+      else { // processMountSpec will raise an exception if neither file nor dir is defined.
+        // We don't bother to test what 'dir' is. If it exists, we won't overwrite, so the subsequent attempt to
         // write a file into it can just fail if it's not of an appropriate type.
-        fs.existsSync(dataDir) || fs.mkdirSync(dataDir)
+        fs.existsSync(dir) || fs.mkdirSync(dir)
 
         for (const subKey of Object.keys(subData)) {
           writeFJSON({
             data           : subData[subKey],
-            filePath       : path.join(dataDir, `${subKey}.json`),
+            filePath       : fsPath.join(dir, `${subKey}.json`),
             saveFrom,
-            jsonPathToSelf : updatejsonPathToSelf(`${dataPath}.${subKey}`, jsonPathToSelf)
+            jsonPathToSelf : updatejsonPathToSelf(`${path}.${subKey}`, jsonPathToSelf)
           })
         }
       }
@@ -217,19 +217,19 @@ const getMountSpecs = (data) => getMyMeta(data)?.mountSpecs
 * Internal function to process a mount spec into useful components utilized by the `readFJSON` and `writeFJSON`.
 */
 const processMountSpec = ({ mntSpec, data, preserveOriginal }) => {
-  let { dataPath, dataFile, dataDir } = mntSpec
+  let { path, file, dir } = mntSpec
 
-  dataFile && dataDir // eslint-disable-line no-unused-expressions
-    && throw new Error(`Bad mount spec; cannot specify both data file (${dataFile}) and directory (${dataDir})`)
-  !dataFile && !dataDir // eslint-disable-line no-unused-expressions
+  file && dir // eslint-disable-line no-unused-expressions
+    && throw new Error(`Bad mount spec; cannot specify both data file (${file}) and directory (${dir})`)
+  !file && !dir // eslint-disable-line no-unused-expressions
     && throw new Error('Bad mount spec; neither data file nor directory.')
 
-  dataFile && (dataFile = envTemplateString(dataFile))
-  dataDir && (dataDir = envTemplateString(dataDir))
+  file && (file = envTemplateString(file))
+  dir && (dir = envTemplateString(dir))
 
-  const { penultimateRef: mountPoint, finalKey, newData } = processJSONPath({ path : dataPath, data, preserveOriginal })
+  const { penultimateRef: mountPoint, finalKey, newData } = processJSONPath({ path : path, data, preserveOriginal })
 
-  return { dataFile, dataDir, dataPath, mountPoint, finalKey, newData }
+  return { file, dir, path, mountPoint, finalKey, newData }
 }
 
 /**
@@ -257,7 +257,7 @@ const shallowCopy = (input) => Array.isArray(input)
 
 const processJSONPath = ({ path, data, preserveOriginal }) => {
   if (!path) {
-    throw new Error("No 'dataPath' specified for mount spec mount point.")
+    throw new Error("No 'path' specified for mount spec mount point.")
   }
   const pathTrail = path.split('.')
   pathTrail.shift()

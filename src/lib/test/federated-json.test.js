@@ -1,7 +1,7 @@
 /* global beforeAll beforeEach describe expect test */
 
 import * as fs from 'fs'
-import * as path from 'path'
+import * as fsPath from 'path'
 
 import { addMountPoint, FJSON_META_DATA_KEY, readFJSON, setSource, writeFJSON } from '../federated-json'
 
@@ -14,7 +14,7 @@ const expectedRootObject = {
   _meta : {
     [FJSON_META_DATA_KEY] : {
       mountSpecs : [ // eslint-disable-next-line no-template-curly-in-string
-        { dataPath : '.foo.bar', dataFile : '${TEST_DIR}/data/foo-bar.json' }
+        { path : '.foo.bar', file : '${TEST_DIR}/data/foo-bar.json' }
       ]
     }
   },
@@ -23,7 +23,7 @@ const expectedRootObject = {
       _meta : {
         [FJSON_META_DATA_KEY] : {
           mountSpecs : [ // eslint-disable-next-line no-template-curly-in-string
-            { dataPath : '.baz', dataFile : '${TEST_DIR}/data/baz.json' }
+            { path : '.baz', file : '${TEST_DIR}/data/baz.json' }
           ]
         }
       },
@@ -54,15 +54,15 @@ const expectedFedLinkArr2Arr = Object.assign({}, expectedArr2Arr)
 expectedFedLinkArr2Arr._meta = Object.assign({}, expectedArr2Arr._meta)
 expectedFedLinkArr2Arr._meta[FJSON_META_DATA_KEY] = Object.assign({
   mountSpecs : [{ // eslint-disable-next-line no-template-curly-in-string
-    dataFile : '${TEST_DIR}/data/fed-link-source.json',
-    dataPath : '.source'
+    file : '${TEST_DIR}/data/fed-link-source.json',
+    path : '.source'
   }]
 },
 expectedFedLinkArr2Arr._meta[FJSON_META_DATA_KEY])
 const expectedScanResult = {
   _meta : {
     'com.liquid-labs.federated-json' : { // eslint-disable-next-line no-template-curly-in-string
-      mountSpecs : [{ dataDir : '${TEST_DIR}/data/datadir', dataPath : '.data' }]
+      mountSpecs : [{ dir : '${TEST_DIR}/data/datadir', path : '.data' }]
     }
   },
   data : {
@@ -72,10 +72,10 @@ const expectedScanResult = {
   }
 }
 
-const testDataPath = './src/lib/test/data'
-const EMPTY_OBJ_SRC = `${testDataPath}/empty-object.json`
+const testpath = './src/lib/test/data'
+const EMPTY_OBJ_SRC = `${testpath}/empty-object.json`
 // end test constants
-// setup environment for test. Note that 'TEST_DIR' will point to the test-staging, while 'testDataPath' points to src.
+// setup environment for test. Note that 'TEST_DIR' will point to the test-staging, while 'testpath' points to src.
 process.env.TEST_DIR = __dirname
 
 describe('addMountPoint', () => {
@@ -85,14 +85,14 @@ describe('addMountPoint', () => {
   test('sets initial root mount points', () => {
     addMountPoint(data, '.foo', './some-file.json')
     expect(data._meta).toEqual({
-      [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : '.foo', dataFile : './some-file.json' }] }
+      [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', file : './some-file.json' }] }
     })
   })
 
   test('sets initial root mount points', () => {
     addMountPoint(data, '.foo', './some-file.json')
     expect(data._meta).toEqual({
-      [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : '.foo', dataFile : './some-file.json' }] }
+      [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', file : './some-file.json' }] }
     })
   })
 
@@ -100,7 +100,7 @@ describe('addMountPoint', () => {
     addMountPoint(data, '.foo', './some-file.json')
     addMountPoint(data, '.foo', './another-file.json')
     expect(data._meta).toEqual({
-      [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : '.foo', dataFile : './another-file.json' }] }
+      [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', file : './another-file.json' }] }
     })
   })
 
@@ -112,11 +112,11 @@ describe('addMountPoint', () => {
     expect(data._meta).toEqual(metaModel)
 
     addMountPoint(data, '.foo', './some-file.json')
-    metaModel[FJSON_META_DATA_KEY].mountSpecs = [{ dataPath : '.foo', dataFile : './some-file.json' }]
+    metaModel[FJSON_META_DATA_KEY].mountSpecs = [{ path : '.foo', file : './some-file.json' }]
     expect(data._meta).toEqual(metaModel)
 
     addMountPoint(data, '.foo', './another-file.json')
-    metaModel[FJSON_META_DATA_KEY].mountSpecs = [{ dataPath : '.foo', dataFile : './another-file.json' }]
+    metaModel[FJSON_META_DATA_KEY].mountSpecs = [{ path : '.foo', file : './another-file.json' }]
     expect(data._meta).toEqual(metaModel)
   })
 
@@ -125,10 +125,10 @@ describe('addMountPoint', () => {
     addMountPoint(data, 'foo', './some-file.json')
     addMountPoint(data, 'foo/bar', './another-file.json')
     expect(data._meta).toEqual({
-      [FJSON_META_DATA_KEY]: { "mountSpecs": [{ "dataPath": "foo", "dataFile": "./some-file.json"}] }
+      [FJSON_META_DATA_KEY]: { "mountSpecs": [{ "path": "foo", "file": "./some-file.json"}] }
     })
     expect(data.foo._meta).toEqual({
-      [FJSON_META_DATA_KEY]: { "mountSpecs": [{ "dataPath": "bar", "dataFile": "./another-file.json"}] }
+      [FJSON_META_DATA_KEY]: { "mountSpecs": [{ "path": "bar", "file": "./another-file.json"}] }
     })
   }) */
 })
@@ -137,13 +137,13 @@ describe('readFJSON', () => {
   test.each`
     description | file | expected
     ${'empty-object.json/trivial object'} | ${EMPTY_OBJ_SRC} | ${{}}
-    ${'baz.json/simple string'} | ${testDataPath + '/baz.json'} | ${expectedBaz}
-    ${'root-object.json/federated object'} | ${testDataPath + '/root-object.json'} | ${expectedRootObject}
-    ${'link-arr2arr.json/intra-linked object'} | ${testDataPath + '/link-arr2arr.json'} | ${expectedArr2Arr}
-    ${'link-obj2arr.json/intra-linked object'} | ${testDataPath + '/link-obj2arr.json'} | ${expectedObj2Arr}
-    ${'link-str2arr.json/intra-linked object'} | ${testDataPath + '/link-str2arr.json'} | ${expectedStr2Arr}
-    ${'fed-link-arr2arr.json/fed+linked object'} | ${testDataPath + '/fed-link-arr2arr.json'} | ${expectedFedLinkArr2Arr}
-    ${'data-dir.json/scan-and-load'} | ${testDataPath + '/data-dir.json'} | ${expectedScanResult}
+    ${'baz.json/simple string'} | ${testpath + '/baz.json'} | ${expectedBaz}
+    ${'root-object.json/federated object'} | ${testpath + '/root-object.json'} | ${expectedRootObject}
+    ${'link-arr2arr.json/intra-linked object'} | ${testpath + '/link-arr2arr.json'} | ${expectedArr2Arr}
+    ${'link-obj2arr.json/intra-linked object'} | ${testpath + '/link-obj2arr.json'} | ${expectedObj2Arr}
+    ${'link-str2arr.json/intra-linked object'} | ${testpath + '/link-str2arr.json'} | ${expectedStr2Arr}
+    ${'fed-link-arr2arr.json/fed+linked object'} | ${testpath + '/fed-link-arr2arr.json'} | ${expectedFedLinkArr2Arr}
+    ${'data-dir.json/scan-and-load'} | ${testpath + '/data-dir.json'} | ${expectedScanResult}
   `('loads $description', ({ file, expected }) => {
     const data = readFJSON(file)
     expect(data).toEqual(expected)
@@ -167,24 +167,24 @@ describe('readFJSON', () => {
   })
 
   test('throws useful error when JSON syntax is bad.', () => {
-    const badSyntaxFile = `${testDataPath}/bad-syntax.json`
+    const badSyntaxFile = `${testpath}/bad-syntax.json`
     expect(() => { readFJSON(badSyntaxFile) }).toThrow(new RegExp(`unexpected token.*${badSyntaxFile}`, 'i'))
   })
 
   test('throws useful error when no data source specified in mnt spec', () => {
-    const badMntSpec = `${testDataPath}/bad-mnt-spec-no-data-path.json`
-    expect(() => { readFJSON(badMntSpec) }).toThrow(/No 'dataPath' specified/)
+    const badMntSpec = `${testpath}/bad-mnt-spec-no-data-path.json`
+    expect(() => { readFJSON(badMntSpec) }).toThrow(/No 'path' specified/)
   })
 
   test('throws useful error when no data source is empty in mnt spec', () => {
-    const badMntSpec = `${testDataPath}/bad-mnt-spec-empty-data-path.json`
-    expect(() => { readFJSON(badMntSpec) }).toThrow(/No 'dataPath' specified/)
+    const badMntSpec = `${testpath}/bad-mnt-spec-empty-data-path.json`
+    expect(() => { readFJSON(badMntSpec) }).toThrow(/No 'path' specified/)
   })
 })
 
 describe('writeFJSON', () => {
   beforeAll(() => {
-    fs.rmdirSync(testDir, { recursive : true })
+    fs.rmSync(testDir, { force: true, recursive : true })
     fs.mkdirSync(testDir)
   })
 
@@ -201,7 +201,7 @@ describe('writeFJSON', () => {
     const barTestFile = `${testDir}/bar.json`
     const testEmbed = { bar : "I'm an embed!" }
     const testData = {
-      _meta : { [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : '.foo', dataFile : barTestFile }] } },
+      _meta : { [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', file : barTestFile }] } },
       foo   : testEmbed
     }
     beforeAll(() => {
@@ -233,7 +233,7 @@ describe('writeFJSON', () => {
     const bazValue = [1, 2, 'Hi!']
     const testEmbed = { bar : barValue, baz : bazValue }
     const testData = {
-      _meta : { [FJSON_META_DATA_KEY] : { mountSpecs : [{ dataPath : '.foo', dataDir : barTestDir }] } },
+      _meta : { [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', dir : barTestDir }] } },
       foo   : testEmbed
     }
     beforeAll(() => {
@@ -263,50 +263,50 @@ describe('writeFJSON', () => {
   })
 
   describe('supports partial branch writes', () => {
-    const testStagingDataPath = path.join(__dirname, 'data')
+    const testStagingpath = fsPath.join(__dirname, 'data')
 
     test('to mounted files', () => {
       // TODO: In theory, it would be better to start form 'expectedRootObject', but we should turn that into a function to isolate instances from cross-pollution
-      const dataFile = `${testDataPath}/root-object.json`
-      const data = readFJSON(dataFile, { rememberSource : true })
+      const file = `${testpath}/root-object.json`
+      const data = readFJSON(file, { rememberSource : true })
 
-      const preRootStat = fs.statSync(dataFile, { bigint : true })
-      const preFooStat = fs.statSync(`${testStagingDataPath}/foo-bar.json`, { bigint : true })
-      const preBazStat = fs.statSync(`${testStagingDataPath}/baz.json`, { bigint : true })
+      const preRootStat = fs.statSync(file, { bigint : true })
+      const preFooStat = fs.statSync(`${testStagingpath}/foo-bar.json`, { bigint : true })
+      const preBazStat = fs.statSync(`${testStagingpath}/baz.json`, { bigint : true })
 
       data.foo.bar['another key'] = "I'm a new value!"
       data.foo.bar.baz = ['I am no longer', 'just a string']
       writeFJSON({ data, saveFrom : '.foo' })
 
-      const postRootStat = fs.statSync(dataFile, { bigint : true })
-      const postFooStat = fs.statSync(`${testStagingDataPath}/foo-bar.json`, { bigint : true })
-      const postBazStat = fs.statSync(`${testStagingDataPath}/baz.json`, { bigint : true })
+      const postRootStat = fs.statSync(file, { bigint : true })
+      const postFooStat = fs.statSync(`${testStagingpath}/foo-bar.json`, { bigint : true })
+      const postBazStat = fs.statSync(`${testStagingpath}/baz.json`, { bigint : true })
 
       expect(preRootStat).toEqual(postRootStat)
       expect(preFooStat.mtimeNs).toBeLessThan(postFooStat.mtimeNs)
       expect(preBazStat.mtimeNs).toBeLessThan(postBazStat.mtimeNs)
 
-      const bazContents = fs.readFileSync(`${testStagingDataPath}/baz.json`)
+      const bazContents = fs.readFileSync(`${testStagingpath}/baz.json`)
       expect(JSON.parse(bazContents)).toEqual(data.foo.bar.baz)
 
-      const fooBarContents = fs.readFileSync(`${testStagingDataPath}/foo-bar.json`)
+      const fooBarContents = fs.readFileSync(`${testStagingpath}/foo-bar.json`)
       data.foo.bar.baz = null
       expect(JSON.parse(fooBarContents)).toEqual(data.foo.bar)
     })
 
     describe('to mounted directories', () => {
-      let dataFile, data, preRootStat
+      let file, data, preRootStat
       const preStats = {}
       const loadStats = (target) => {
         for (const subKey of ['foo', 'bar', 'baz']) {
-          target[subKey] = fs.statSync(`${testStagingDataPath}/datadir/${subKey}.json`, { bigint : true })
+          target[subKey] = fs.statSync(`${testStagingpath}/datadir/${subKey}.json`, { bigint : true })
         }
       }
       beforeAll(() => {
         // TODO: In theory, it would be better to start form 'expectedRootObject', but we should turn that into a function to isolate instances from cross-pollution
-        dataFile = `${testDataPath}/data-dir.json`
-        data = readFJSON(dataFile, { rememberSource : true })
-        preRootStat = fs.statSync(dataFile, { bigint : true })
+        file = `${testpath}/data-dir.json`
+        data = readFJSON(file, { rememberSource : true })
+        preRootStat = fs.statSync(file, { bigint : true })
       })
 
       test('update all leaves', () => {
@@ -317,14 +317,14 @@ describe('writeFJSON', () => {
 
         writeFJSON({ data, saveFrom : '.data' })
 
-        const postRootStat = fs.statSync(dataFile, { bigint : true })
+        const postRootStat = fs.statSync(file, { bigint : true })
         const postStats = {}
         loadStats(postStats)
 
         expect(preRootStat).toEqual(postRootStat)
         for (const key of Object.keys(preStats)) {
           expect(preStats[key].mtimeNs).toBeLessThan(postStats[key].mtimeNs)
-          const leafContents = fs.readFileSync(`${testStagingDataPath}/datadir/${key}.json`)
+          const leafContents = fs.readFileSync(`${testStagingpath}/datadir/${key}.json`)
           expect(JSON.parse(leafContents)).toEqual(data.data[key])
         }
       })
@@ -334,7 +334,7 @@ describe('writeFJSON', () => {
         data.data.baz['more stuff'] = 'Lots of stuff here'
         writeFJSON({ data, saveFrom : '.data.baz' })
 
-        const postRootStat = fs.statSync(dataFile, { bigint : true })
+        const postRootStat = fs.statSync(file, { bigint : true })
         const postStats = {}
         loadStats(postStats)
 
@@ -346,7 +346,7 @@ describe('writeFJSON', () => {
           else {
             expect(preStats[key]).toEqual(postStats[key])
           }
-          const leafContents = fs.readFileSync(`${testStagingDataPath}/datadir/${key}.json`)
+          const leafContents = fs.readFileSync(`${testStagingpath}/datadir/${key}.json`)
           expect(JSON.parse(leafContents)).toEqual(data.data[key])
         }
       })
