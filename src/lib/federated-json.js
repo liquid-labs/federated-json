@@ -43,6 +43,7 @@ const jsonRE = /\.json$/
 * files.
 */
 const readFJSON = (...args) => {
+
   let filePath, rememberSource
   if (!args || args.length === 0) throw new Error("Invalid 'no argument' call to readJSON.")
   else if (typeof args[0] === 'string') {
@@ -75,7 +76,7 @@ const readFJSON = (...args) => {
   }
 
   if (rememberSource === true) {
-    setSource(data, filePath)
+    setSource({ data, file: filePath })
   }
 
   for (const mntSpec of getMountSpecs(data) || []) {
@@ -128,9 +129,9 @@ const readFJSON = (...args) => {
 /**
 * Set's the meta source information.
 */
-const setSource = (data, filePath) => {
+const setSource = ({ data, file }) => {
   const myMeta = ensureMyMeta(data)
-  myMeta.sourceFile = filePath
+  myMeta.sourceFile = file
 }
 
 /**

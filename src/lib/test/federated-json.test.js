@@ -108,7 +108,7 @@ describe('addMountPoint', () => {
     const metaModel = {
       [FJSON_META_DATA_KEY] : { sourceFile : './our-file.json' }
     }
-    setSource(data, './our-file.json')
+    setSource({ data, file: './our-file.json' })
     expect(data._meta).toEqual(metaModel)
 
     addMountPoint({ data, path: '.foo', file: './some-file.json' })
@@ -356,7 +356,7 @@ describe('writeFJSON', () => {
   test('will write to meta source when prsent', () => {
     const testFile = `${testDir}/empty-object.json`
     const testData = {}
-    setSource(testData, testFile)
+    setSource({ data: testData, file: testFile })
     writeFJSON({ data : testData })
     const contents = fs.readFileSync(testFile)
     expect(JSON.parse(contents)).toEqual(testData)
