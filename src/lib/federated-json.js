@@ -54,6 +54,13 @@ const readFJSON = (...args) => {
     else if (args.length !== 1)
       throw new Error("Invalid call to readFJSON; try expects (string, options) or (options).")
   }
+  else { // treat args[0] as object and see what happens!
+    if (args.length > 1) {
+      throw new Error("Invalid call to readFJSON; when passing options as first arg, it must be the only arg.")
+    };
+    
+    ({ file, rememberSource, includeMetaFuncs, _metaPaths, _rootPath } = args[0]);
+  }
   
   if (!file) { throw new Error(`File path invalid. (${file})`) }
 
