@@ -42,10 +42,21 @@ const jsonRE = /\.json$/
 * Reads a JSON file and processes for federated mount points to construct a composite JSON object from one or more
 * files.
 */
-const readFJSON = (filePath, options) => {
+const readFJSON = (...args) => {
+  let filePath, rememberSource
+  if (!args || args.length === 0) throw new Error("Invalid 'no argument' call to readJSON.")
+  else if (typeof args[0] === 'string') {
+    filePath = args[0]
+    if (args.length === 2) {
+      if (typeof args[1] === 'object') ({ rememberSource } = args[1]);
+      else throw new Error("Unexpected second argument to readJSON; expects options object.")
+    }
+    else if (args.length !== 1)
+      throw new Error("Invalid call to readFJSON; try expects (string, options) or (options).")
+  }
+  else
+  
   if (!filePath) { throw new Error(`File path invalid. (${filePath})`) }
-
-  const { rememberSource } = options || {}
 
   const processedPath = envTemplateString(filePath)
   if (!fs.existsSync(processedPath)) {
@@ -63,7 +74,7 @@ const readFJSON = (filePath, options) => {
     }
   }
 
-  if (rememberSource) {
+  if (rememberSource === true) {
     setSource(data, filePath)
   }
 
