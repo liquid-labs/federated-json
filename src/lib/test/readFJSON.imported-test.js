@@ -1,4 +1,4 @@
-/* global beforeEach describe expect test */
+/* global describe expect test */
 
 import { readFJSON, FJSON_META_DATA_KEY } from '../federated-json'
 import { EMPTY_OBJ_SRC, testpath } from './shared-test-data'

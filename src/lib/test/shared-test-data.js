@@ -1,5 +1,3 @@
-import { FJSON_META_DATA_KEY } from '../federated-json'
-
 const testpath = './src/lib/test/data'
 
 const EMPTY_OBJ_SRC = `${testpath}/empty-object.json`

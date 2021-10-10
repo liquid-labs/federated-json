@@ -1,4 +1,4 @@
-/* global beforeEach describe expect test */
+/* global beforeAll describe expect test */
 import * as fs from 'fs'
 import * as fsPath from 'path'
 
@@ -162,8 +162,6 @@ const writeFJSONTests = () => {
           ['baz', `${testStagingpath}/datadir/baz.json`], // an object literal
           ['foo', undefined] // a string
         ])("in memory meta-source for '%s' is '%s'", (key, source) => {
-          const leafContentsOnDisk = fs.readFileSync(`${testStagingpath}/datadir/${key}.json`, { encoding : 'utf8' })
-          const leafOnDisk = JSON.parse(leafContentsOnDisk)
           const leafInMemory = data.data[key]
           expect(leafInMemory?._meta?.[FJSON_META_DATA_KEY]?.sourceFile).toBe(source)
         })

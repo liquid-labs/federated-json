@@ -1,4 +1,4 @@
-/* global beforeAll beforeEach describe expect test */
+/* global describe */
 import { addMountPointTests } from './addMountPoint.imported-test'
 import { readFJSONTests } from './readFJSON.imported-test'
 import { writeFJSONTests } from './writeFJSON.imported-test'
