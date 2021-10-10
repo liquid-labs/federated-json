@@ -4,3 +4,7 @@
 /test-staging
 /.yalc
 /yalc.lock
+# example related stuff
+/example.js
+/data.json
+/data-foo-bar*.json

@@ -7,7 +7,9 @@
   "scripts": {
     "lint": "JS_SRC=src/lib catalyst-scripts lint",
     "lint:fix": "JS_SRC=src/lib catalyst-scripts lint-fix",
-    "build": "JS_SRC=src/lib catalyst-scripts build && rollup-bash src/bin/fjson.sh dist/fjson.sh && JS_FILE=src/lib/test/example.js JS_OUT=dist/example.js catalyst-scripts build",
+    "build": "JS_SRC=src/lib catalyst-scripts build && rollup-bash src/bin/fjson.sh dist/fjson.sh",
+    "build:example": "JS_FILE=src/example/example.js JS_OUT=./example.js catalyst-scripts build",
+    "example": "npm run build:example && node ./example.js",
     "prepare": "npm run build",
     "pretest": "JS_SRC=src/lib catalyst-scripts pretest && mkdir -p test-staging/test/data/datadir && cp src/lib/test/data/*.json test-staging/test/data && cp src/lib/test/data/datadir/*.json test-staging/test/data/datadir",
     "test": "JS_SRC=src/lib catalyst-scripts test",
