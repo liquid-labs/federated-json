@@ -14,7 +14,7 @@
     "pretest": "JS_SRC=src/lib catalyst-scripts pretest && mkdir -p test-staging/test/data/datadir && cp src/lib/test/data/*.json test-staging/test/data && cp src/lib/test/data/datadir/*.json test-staging/test/data/datadir",
     "test": "JS_SRC=src/lib catalyst-scripts test",
     "preversion": "JS_SRC=src npm run lint && npm test",
-    "postversion": "git push && git push --tags"
+    "postversion": "git push upstream v${npm_package_version}"
   },
   "bin": {
     "fjson": "dist/fjson.sh"
