@@ -90,6 +90,22 @@ const readFJSONTests = () => {
       const data = readFJSON(file)
       expect(data).toEqual(expected)
     })
+    
+    test.each(readTable)('loads $description with separate meta', ({ file, expected }) => {
+      const [ data, meta ] = readFJSON({ file, separateMeta: true })
+      console.log(meta)
+      const noMetaExpected = Object.assign({}, expected)
+      const rootMeta = noMetaExpected._meta
+      delete noMetaExpected._meta
+      // this is a little hacky, but good enough for now...
+      if (noMetaExpected?.foo?.bar) {
+        const barMeta = noMetaExpected.foo.bar._meta
+        delete noMetaExpected.foo.bar._meta
+        expect(barMeta).toEqual(meta.foo.bar._meta)
+      }
+      expect(data).toEqual(expected)
+      expect(rootMeta).toEqual(meta._meta)
+    })
 
     test('can remember the source', () => {
       const data = readFJSON(EMPTY_OBJ_SRC, { rememberSource : true })
