@@ -44,13 +44,13 @@ const jsonRE = /\.json$/
 */
 const readFJSON = (...args) => {
   let file, rememberSource, separateMeta, _metaData, _metaPaths, _rootPath
-  if (!args || args.length === 0) throw new Error("Invalid 'no argument' call to readJSON.")
+  if (!args || args.length === 0) throw new Error("Invalid 'no argument' call to readFJSON.")
   else if (typeof args[0] === 'string') {
     file = args[0]
     if (args.length === 2) {
       if (typeof args[1] === 'object')
         ({ rememberSource, separateMeta, _metaData, _metaPaths, _rootPath } = args[1]);
-      else throw new Error("Unexpected second argument to readJSON; expects options object.")
+      else throw new Error("Unexpected second argument to readFJSON; expects options object.")
     }
     else if (args.length !== 1)
       throw new Error("Invalid call to readFJSON; try expects (string, options) or (options).")
