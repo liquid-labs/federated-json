@@ -67,19 +67,26 @@ const expectedScanResult = {
   }
 }
 
+const mkEntry = (description, file, expected) => ({
+  description,
+  file,
+  expected
+})
+
+const readTable = [
+  mkEntry('empty-object.json/trivial object', EMPTY_OBJ_SRC, {}),
+  mkEntry('baz.json/simple string', testpath + '/baz.json', expectedBaz),
+  mkEntry('root-object.json/federated object', testpath + '/root-object.json', expectedRootObject),
+  mkEntry('link-arr2arr.json/intra-linked object', testpath + '/link-arr2arr.json', expectedArr2Arr),
+  mkEntry('link-obj2arr.json/intra-linked object', testpath + '/link-obj2arr.json', expectedObj2Arr),
+  mkEntry('link-str2arr.json/intra-linked object', testpath + '/link-str2arr.json', expectedStr2Arr),
+  mkEntry('fed-link-arr2arr.json/fed+linked object', testpath + '/fed-link-arr2arr.json', expectedFedLinkArr2Arr),
+  mkEntry('data-dir.json/scan-and-load', testpath + '/data-dir.json', expectedScanResult)
+]
+
 const readFJSONTests = () => {
   describe('readFJSON', () => {
-    test.each`
-      description | file | expected
-      ${'empty-object.json/trivial object'} | ${EMPTY_OBJ_SRC} | ${{}}
-      ${'baz.json/simple string'} | ${testpath + '/baz.json'} | ${expectedBaz}
-      ${'root-object.json/federated object'} | ${testpath + '/root-object.json'} | ${expectedRootObject}
-      ${'link-arr2arr.json/intra-linked object'} | ${testpath + '/link-arr2arr.json'} | ${expectedArr2Arr}
-      ${'link-obj2arr.json/intra-linked object'} | ${testpath + '/link-obj2arr.json'} | ${expectedObj2Arr}
-      ${'link-str2arr.json/intra-linked object'} | ${testpath + '/link-str2arr.json'} | ${expectedStr2Arr}
-      ${'fed-link-arr2arr.json/fed+linked object'} | ${testpath + '/fed-link-arr2arr.json'} | ${expectedFedLinkArr2Arr}
-      ${'data-dir.json/scan-and-load'} | ${testpath + '/data-dir.json'} | ${expectedScanResult}
-    `('loads $description', ({ file, expected }) => {
+    test.each(readTable)('loads $description', ({ file, expected }) => {
       const data = readFJSON(file)
       expect(data).toEqual(expected)
     })
