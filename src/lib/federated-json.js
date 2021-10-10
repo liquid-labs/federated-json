@@ -121,7 +121,7 @@ const readFJSON = (...args) => {
         separateMeta,
         _metaData,
         _metaPaths,
-        rootPath: `${_rootPath || ''}${path}`
+        _rootPath: `${_rootPath || ''}${path}`
       })
       if (separateMeta) {
         subData = subData[0]
@@ -145,7 +145,7 @@ const readFJSON = (...args) => {
           separateMeta,
           _metaData,
           _metaPaths,
-          rootPath: `${_rootPath || ''}${path}`
+          _rootPath: `${_rootPath || ''}${path}`
         })
         if (separateMeta) {
           subData = subData[0]

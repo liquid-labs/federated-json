@@ -42,8 +42,21 @@ const linkyBase = {
   },
   source : [linkyBarRef, linkyBazRef]
 }
+
+// slight rename since we use 'foo.bar.baz', but without mount points (matters for the meta-separate tests)
+const linkyBase2 = {
+  _meta : {
+    [FJSON_META_DATA_KEY] : {
+      linkSpecs : [
+        { linkRefs : '.foo2', linkTo : '.source', linkKey : 'name' }
+      ]
+    }
+  },
+  source : [linkyBarRef, linkyBazRef]
+}
+
 const expectedArr2Arr = Object.assign({ foo : [linkyBarRef, linkyBazRef] }, linkyBase)
-const expectedObj2Arr = Object.assign({ foo : { bar : linkyBarRef, baz : linkyBazRef } }, linkyBase)
+const expectedObj2Arr = Object.assign({ foo2 : { bar : linkyBarRef, baz : linkyBazRef } }, linkyBase2)
 const expectedStr2Arr = Object.assign({ foo : linkyBarRef }, linkyBase)
 const expectedFedLinkArr2Arr = Object.assign({}, expectedArr2Arr)
 expectedFedLinkArr2Arr._meta = Object.assign({}, expectedArr2Arr._meta)
@@ -93,7 +106,6 @@ const readFJSONTests = () => {
     
     test.each(readTable)('loads $description with separate meta', ({ file, expected }) => {
       const [ data, meta ] = readFJSON({ file, separateMeta: true })
-      console.log(meta)
       const noMetaExpected = Object.assign({}, expected)
       const rootMeta = noMetaExpected._meta
       delete noMetaExpected._meta
