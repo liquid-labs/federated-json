@@ -98,17 +98,20 @@ const readFJSON = (...args) => {
     const myPath = _rootPath || '.'
     _metaPaths.push(myPath)
     // TODO: currently limited to mount paths traversing objects only
-    let currRef = _metaData
+    let currMetaRef = _metaData
     if (myPath !== '.') {
       const currPath = myPath.split('.')
       currPath.shift()
       for (const entry of currPath) {
-        currRef[entry] = {}
-        currRef = currRef[entry]
+        currMetaRef[entry] = {}
+        currMetaRef = currMetaRef[entry]
       }
     }
-    currRef._meta = { [FJSON_META_DATA_KEY] : myMeta }
-    _metaData = currRef
+    else if (separateMeta === true) {
+      delete data._meta
+    }
+    currMetaRef._meta = { [FJSON_META_DATA_KEY] : myMeta }
+    _metaData = currMetaRef
   }
 
   for (const mntSpec of myMeta?.mountSpecs || []) {
@@ -123,7 +126,7 @@ const readFJSON = (...args) => {
         _metaPaths,
         _rootPath: `${_rootPath || ''}${path}`
       })
-      if (separateMeta) {
+      if (separateMeta === true) {
         subData = subData[0]
         delete subData._meta
       }
@@ -147,7 +150,7 @@ const readFJSON = (...args) => {
           _metaPaths,
           _rootPath: `${_rootPath || ''}${path}`
         })
-        if (separateMeta) {
+        if (separateMeta === true) {
           subData = subData[0]
           delete subData._meta
         }
@@ -156,7 +159,7 @@ const readFJSON = (...args) => {
     }
   }
 
-  for (const lnkSpec of getLinkSpecs(data) || []) {
+  for (const lnkSpec of myMeta?.linkSpecs || []) {
     const { finalRef, source, keyName, penultimateRef, finalKey } = processLinkSpec(lnkSpec, data)
 
     const getRealItem = (soure, keyName, key) =>
@@ -299,11 +302,6 @@ const processMountSpec = ({ mntSpec, data, preserveOriginal }) => {
 
   return { file, dir, path, mountPoint, finalKey, newData }
 }
-
-/**
-* Internal function to test for and extract link specs from the provided JSON object.
-*/
-const getLinkSpecs = (data) => getMyMeta(data)?.linkSpecs
 
 /**
 * Internal function to process a link spec into useful components utilized by the `readFJSON` and `writeFJSON`.
