@@ -8,7 +8,7 @@ import { testDir, testpath } from './shared-test-data'
 const writeFJSONTests = () => {
   describe('writeFJSON', () => {
     beforeAll(() => {
-      fs.rmSync(testDir, { force: true, recursive : true })
+      fs.rmSync(testDir, { force : true, recursive : true })
       fs.mkdirSync(testDir)
     })
 
@@ -133,14 +133,14 @@ const writeFJSONTests = () => {
           // need to set 'rememberSource' so the sub-data will get read with source attached.
           data = readFJSON(file, { rememberSource : true })
           preRootStat = fs.statSync(file, { bigint : true })
-          
+
           loadStats(preStats)
           data.data.foo = 'new foo'
           data.data.baz['more stuff'] = 'More stuff'
           data.data.bar.push(4)
 
           writeFJSON({ data, saveFrom : '.data' })
-          
+
           postRootStat = fs.statSync(file, { bigint : true })
           loadStats(postStats)
         })
@@ -148,21 +148,21 @@ const writeFJSONTests = () => {
         test('does not update root', () => {
           expect(preRootStat).toEqual(postRootStat)
         })
-        
+
         test.each([
           ['bar'], // an array
           ['baz'], // an object literal
-          ['foo'], // a string
+          ['foo'] // a string
         ], ("file for '%s' has been updated", (key) => {
           expect(preStats[key].mtimeNs).toBeLessThan(postStats[key].mtimeNs)
         }))
-        
+
         test.each([
           ['bar', undefined], // an array
           ['baz', `${testStagingpath}/datadir/baz.json`], // an object literal
-          ['foo', undefined], // a string
+          ['foo', undefined] // a string
         ])("in memory meta-source for '%s' is '%s'", (key, source) => {
-          const leafContentsOnDisk = fs.readFileSync(`${testStagingpath}/datadir/${key}.json`, { encoding: 'utf8' })
+          const leafContentsOnDisk = fs.readFileSync(`${testStagingpath}/datadir/${key}.json`, { encoding : 'utf8' })
           const leafOnDisk = JSON.parse(leafContentsOnDisk)
           const leafInMemory = data.data[key]
           expect(leafInMemory?._meta?.[FJSON_META_DATA_KEY]?.sourceFile).toBe(source)
@@ -170,11 +170,11 @@ const writeFJSONTests = () => {
 
         test("the on-disk file for 'baz' remembers the source", () => {
           const source = `${testStagingpath}/datadir/baz.json`
-          const leafContentsOnDisk = fs.readFileSync(source, { encoding: 'utf8' })
+          const leafContentsOnDisk = fs.readFileSync(source, { encoding : 'utf8' })
           const leafOnDisk = JSON.parse(leafContentsOnDisk)
           expect(leafOnDisk?._meta?.[FJSON_META_DATA_KEY]?.sourceFile).toBe(source)
         })
-        
+
         // in the case of the 'bar' array, the in-memory object has a non-iterable _meta field, but this gets lost when //
         // it's written to disk.
         // for the string 'foo', there's no source attached in the first place and testing is pointless because you can't
@@ -194,11 +194,11 @@ const writeFJSONTests = () => {
             postRootStat = fs.statSync(file, { bigint : true })
             loadStats(postStats)
           })
-          
+
           test('does not update root', () => {
             expect(preRootStat).toEqual(postRootStat)
           })
-          
+
           test.each([
             ['bar', false],
             ['baz', true],
@@ -216,11 +216,11 @@ const writeFJSONTests = () => {
         })
       })
     })
-    
+
     test('will write to meta source when persent', () => {
       const testFile = `${testDir}/empty-object.json`
       const testData = {}
-      setSource({ data: testData, file: testFile })
+      setSource({ data : testData, file : testFile })
       writeFJSON({ data : testData })
       const contents = fs.readFileSync(testFile)
       expect(JSON.parse(contents)).toEqual(testData)

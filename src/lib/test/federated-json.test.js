@@ -5,8 +5,8 @@ import { writeFJSONTests } from './writeFJSON.imported-test'
 
 describe('federated-json', () => {
   addMountPointTests()
-  
+
   readFJSONTests()
-  
+
   writeFJSONTests()
 })

@@ -103,9 +103,9 @@ const readFJSONTests = () => {
       const data = readFJSON(file)
       expect(data).toEqual(expected)
     })
-    
+
     test.each(readTable)('loads $description with separate meta', ({ file, expected }) => {
-      const [ data, meta ] = readFJSON({ file, separateMeta: true })
+      const [data, meta] = readFJSON({ file, separateMeta : true })
       const noMetaExpected = typeof expected === 'object'
         ? Object.assign({}, expected)
         : expected

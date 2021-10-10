@@ -8,22 +8,22 @@ const addMountPointTests = () => {
     beforeEach(() => { data = { foo : { bar : true }, baz : true } })
 
     test('sets initial root mount points', () => {
-      addMountPoint({ data, path: '.foo', file: './some-file.json' })
+      addMountPoint({ data, path : '.foo', file : './some-file.json' })
       expect(data._meta).toEqual({
         [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', file : './some-file.json' }] }
       })
     })
 
     test('sets initial root mount points', () => {
-      addMountPoint({ data, path: '.foo', file: './some-file.json' })
+      addMountPoint({ data, path : '.foo', file : './some-file.json' })
       expect(data._meta).toEqual({
         [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', file : './some-file.json' }] }
       })
     })
 
     test('updates mount points', () => {
-      addMountPoint({ data, path: '.foo', file: './some-file.json' })
-      addMountPoint({ data, path: '.foo', file: './another-file.json' })
+      addMountPoint({ data, path : '.foo', file : './some-file.json' })
+      addMountPoint({ data, path : '.foo', file : './another-file.json' })
       expect(data._meta).toEqual({
         [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', file : './another-file.json' }] }
       })
@@ -33,14 +33,14 @@ const addMountPointTests = () => {
       const metaModel = {
         [FJSON_META_DATA_KEY] : { sourceFile : './our-file.json' }
       }
-      setSource({ data, file: './our-file.json' })
+      setSource({ data, file : './our-file.json' })
       expect(data._meta).toEqual(metaModel)
 
-      addMountPoint({ data, path: '.foo', file: './some-file.json' })
+      addMountPoint({ data, path : '.foo', file : './some-file.json' })
       metaModel[FJSON_META_DATA_KEY].mountSpecs = [{ path : '.foo', file : './some-file.json' }]
       expect(data._meta).toEqual(metaModel)
 
-      addMountPoint({ data, path: '.foo', file: './another-file.json' })
+      addMountPoint({ data, path : '.foo', file : './another-file.json' })
       metaModel[FJSON_META_DATA_KEY].mountSpecs = [{ path : '.foo', file : './another-file.json' }]
       expect(data._meta).toEqual(metaModel)
     })
