@@ -43,12 +43,13 @@ const jsonRE = /\.json$/
 * files.
 */
 const readFJSON = (...args) => {
-  let file, rememberSource
+  let file, rememberSource, separateMeta, _metaData, _metaPaths, _rootPath
   if (!args || args.length === 0) throw new Error("Invalid 'no argument' call to readJSON.")
   else if (typeof args[0] === 'string') {
     file = args[0]
     if (args.length === 2) {
-      if (typeof args[1] === 'object') ({ rememberSource } = args[1]);
+      if (typeof args[1] === 'object')
+        ({ rememberSource, separateMeta, _metaData, _metaPaths, _rootPath } = args[1]);
       else throw new Error("Unexpected second argument to readJSON; expects options object.")
     }
     else if (args.length !== 1)
@@ -59,7 +60,7 @@ const readFJSON = (...args) => {
       throw new Error("Invalid call to readFJSON; when passing options as first arg, it must be the only arg.")
     };
     
-    ({ file, rememberSource, includeMetaFuncs, _metaPaths, _rootPath } = args[0]);
+    ({ file, rememberSource, separateMeta, _metaData, _metaPaths, _rootPath } = args[0]);
   }
   
   if (!file) { throw new Error(`File path invalid. (${file})`) }
@@ -80,15 +81,52 @@ const readFJSON = (...args) => {
     }
   }
 
-  if (rememberSource === true) {
+  if (rememberSource === true && typeof data === 'object' && !Array.isArray(data)) {
     setSource({ data, file })
   }
 
-  for (const mntSpec of getMountSpecs(data) || []) {
-    const { file, dir, mountPoint, finalKey } = processMountSpec({ mntSpec, data })
-    if (file) {
-      const subData = readFJSON(file)
+  let requireMeta = false
+  // this should only be true for the root object, se we initaliez the structures here and then pass them through as we
+  // process the sub-files
+  if (_metaData === undefined) {
+    _metaData = {}
+    _metaPaths = []
+  }
+  
+  const myMeta = getMyMeta(data)
+  if (myMeta !== undefined) {
+    const myPath = _rootPath || '.'
+    _metaPaths.push(myPath)
+    // TODO: currently limited to mount paths traversing objects only
+    let currRef = _metaData
+    if (myPath !== '.') {
+      const currPath = myPath.split('.')
+      currPath.shift()
+      for (const entry of currPath) {
+        currRef[entry] = {}
+        currRef = currRef[entry]
+      }
+    }
+    currRef._meta = { [FJSON_META_DATA_KEY] : myMeta }
+    _metaData = currRef
+  }
 
+  for (const mntSpec of myMeta?.mountSpecs || []) {
+    const { file, dir, path, mountPoint, finalKey } = processMountSpec({ mntSpec, data })
+    
+    if (file) {
+      let subData = readFJSON({
+        file,
+        rememberSource,
+        separateMeta,
+        _metaData,
+        _metaPaths,
+        rootPath: `${_rootPath || ''}${path}`
+      })
+      if (separateMeta) {
+        subData = subData[0]
+        delete subData._meta
+      }
       mountPoint[finalKey] = subData
     }
     else { // 'dir' is good because we expect processMountSpec() to raise an exception if neither specified.
@@ -101,7 +139,18 @@ const readFJSON = (...args) => {
 
       for (const dirFile of files) {
         const mntPnt = dirFile.replace(jsonRE, '')
-        const subData = readFJSON(fsPath.join(dir, dirFile))
+        let subData = readFJSON({
+          file: fsPath.join(dir, dirFile),
+          rememberSource,
+          separateMeta,
+          _metaData,
+          _metaPaths,
+          rootPath: `${_rootPath || ''}${path}`
+        })
+        if (separateMeta) {
+          subData = subData[0]
+          delete subData._meta
+        }
         mntObj[mntPnt] = subData
       }
     }
@@ -128,7 +177,9 @@ const readFJSON = (...args) => {
     }
   }
 
-  return data
+  return separateMeta
+    ? [ data, _metaData ]
+    : data
 }
 
 /**
@@ -197,7 +248,7 @@ const writeFJSON = ({ data, file, saveFrom, jsonPathToSelf }) => {
   }
 }
 
-const getMyMeta = (data) => data._meta && data._meta[FJSON_META_DATA_KEY]
+const getMyMeta = (data) => data?._meta?.[FJSON_META_DATA_KEY]
 
 const ensureMyMeta = (data) => {
   let myMeta = getMyMeta(data)
