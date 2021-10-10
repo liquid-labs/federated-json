@@ -1,11 +1,11 @@
 /**
 * Library that builds a single JSON object from multiple JSON files. As each file is loaded, we check
-* `_meta/com.liquid-labs.federated-data/mountSpecs`. Each spec consists of a `dataPath` and `dataFile` element. The
+* `_meta/com.liquid-labs.federated-data/mountSpecs`. Each spec consists of a `path` and `file` element. The
 * data path is split on '/' and each element is treated as a string. Therefore, the path is compatible with object keys
 * but does not support arrays.
 */
 import * as fs from 'fs'
-import * as path from 'path'
+import * as fsPath from 'path'
 
 import { envTemplateString, testJsonPaths } from './utils'
 
@@ -15,7 +15,7 @@ const FJSON_META_DATA_KEY = 'com.liquid-labs.federated-json'
 * Adds or updates a mount point entry. WARNING: This method does not currently support sub-mounts. These must be
 * manually updated by accessing the sub-data structure and modifying it's mount points directly.
 */
-const addMountPoint = (data, dataPath, dataFile) => {
+const addMountPoint = ({ data, path, file }) => {
   let mountSpecs = getMountSpecs(data)
 
   if (mountSpecs === undefined) {
@@ -26,8 +26,8 @@ const addMountPoint = (data, dataPath, dataFile) => {
     }
   }
 
-  const i = mountSpecs.findIndex((el) => el.dataPath === dataPath)
-  const mountSpec = { dataPath : dataPath, dataFile }
+  const i = mountSpecs.findIndex((el) => el.path === path)
+  const mountSpec = { path : path, file }
   if (i !== -1) {
     mountSpecs[i] = mountSpec
   }
@@ -42,14 +42,32 @@ const jsonRE = /\.json$/
 * Reads a JSON file and processes for federated mount points to construct a composite JSON object from one or more
 * files.
 */
-const readFJSON = (filePath, options) => {
-  if (!filePath) { throw new Error(`File path invalid. (${filePath})`) }
+const readFJSON = (...args) => {
+  let file, rememberSource, separateMeta, _metaData, _metaPaths, _rootPath
+  if (!args || args.length === 0) throw new Error("Invalid 'no argument' call to readFJSON.")
+  else if (typeof args[0] === 'string') {
+    file = args[0]
+    if (args.length === 2) {
+      if (typeof args[1] === 'object')
+        ({ rememberSource, separateMeta, _metaData, _metaPaths, _rootPath } = args[1]);
+      else throw new Error("Unexpected second argument to readFJSON; expects options object.")
+    }
+    else if (args.length !== 1)
+      throw new Error("Invalid call to readFJSON; try expects (string, options) or (options).")
+  }
+  else { // treat args[0] as object and see what happens!
+    if (args.length > 1) {
+      throw new Error("Invalid call to readFJSON; when passing options as first arg, it must be the only arg.")
+    };
+    
+    ({ file, rememberSource, separateMeta, _metaData, _metaPaths, _rootPath } = args[0]);
+  }
+  
+  if (!file) { throw new Error(`File path invalid. (${file})`) }
 
-  const { rememberSource } = options || {}
-
-  const processedPath = envTemplateString(filePath)
+  const processedPath = envTemplateString(file)
   if (!fs.existsSync(processedPath)) {
-    const msg = `No such file: '${filePath}'` + (filePath !== processedPath ? ` ('${processedPath}')` : '')
+    const msg = `No such file: '${file}'` + (file !== processedPath ? ` ('${processedPath}')` : '')
     throw new Error(msg)
   }
   const dataBits = fs.readFileSync(processedPath)
@@ -59,38 +77,89 @@ const readFJSON = (filePath, options) => {
   }
   catch (e) {
     if (e instanceof SyntaxError) {
-      throw new SyntaxError(`${e.message} while processing ${filePath}`)
+      throw new SyntaxError(`${e.message} while processing ${file}`)
     }
   }
 
-  if (rememberSource) {
-    setSource(data, filePath)
+  if (rememberSource === true && typeof data === 'object' && !Array.isArray(data)) {
+    setSource({ data, file })
   }
 
-  for (const mntSpec of getMountSpecs(data) || []) {
-    const { dataFile, dataDir, mountPoint, finalKey } = processMountSpec({ mntSpec, data })
-    if (dataFile) {
-      const subData = readFJSON(dataFile)
+  let requireMeta = false
+  // this should only be true for the root object, se we initaliez the structures here and then pass them through as we
+  // process the sub-files
+  if (_metaData === undefined) {
+    _metaData = {}
+    _metaPaths = []
+  }
+  
+  const myMeta = getMyMeta(data)
+  if (myMeta !== undefined) {
+    const myPath = _rootPath || '.'
+    _metaPaths.push(myPath)
+    // TODO: currently limited to mount paths traversing objects only
+    let currMetaRef = _metaData
+    if (myPath !== '.') {
+      const currPath = myPath.split('.')
+      currPath.shift()
+      for (const entry of currPath) {
+        currMetaRef[entry] = {}
+        currMetaRef = currMetaRef[entry]
+      }
+    }
+    else if (separateMeta === true) {
+      delete data._meta
+    }
+    currMetaRef._meta = { [FJSON_META_DATA_KEY] : myMeta }
+    _metaData = currMetaRef
+  }
 
+  for (const mntSpec of myMeta?.mountSpecs || []) {
+    const { file, dir, path, mountPoint, finalKey } = processMountSpec({ mntSpec, data })
+    
+    if (file) {
+      let subData = readFJSON({
+        file,
+        rememberSource,
+        separateMeta,
+        _metaData,
+        _metaPaths,
+        _rootPath: `${_rootPath || ''}${path}`
+      })
+      if (separateMeta === true) {
+        subData = subData[0]
+        delete subData._meta
+      }
       mountPoint[finalKey] = subData
     }
-    else { // 'dataDir' is good because we expect processMountSpec() to raise an exception if neither specified.
+    else { // 'dir' is good because we expect processMountSpec() to raise an exception if neither specified.
       const mntObj = {}
       mountPoint[finalKey] = mntObj
 
-      const files = fs.readdirSync(dataDir, { withFileTypes : true })
+      const files = fs.readdirSync(dir, { withFileTypes : true })
         .filter(item => !item.isDirectory() && jsonRE.test(item.name))
         .map(item => item.name) // note 'name' is the simple/basename, not the whole path.
 
       for (const dirFile of files) {
         const mntPnt = dirFile.replace(jsonRE, '')
-        const subData = readFJSON(path.join(dataDir, dirFile))
+        let subData = readFJSON({
+          file: fsPath.join(dir, dirFile),
+          rememberSource,
+          separateMeta,
+          _metaData,
+          _metaPaths,
+          _rootPath: `${_rootPath || ''}${path}`
+        })
+        if (separateMeta === true) {
+          subData = subData[0]
+          delete subData._meta
+        }
         mntObj[mntPnt] = subData
       }
     }
   }
 
-  for (const lnkSpec of getLinkSpecs(data) || []) {
+  for (const lnkSpec of myMeta?.linkSpecs || []) {
     const { finalRef, source, keyName, penultimateRef, finalKey } = processLinkSpec(lnkSpec, data)
 
     const getRealItem = (soure, keyName, key) =>
@@ -111,62 +180,64 @@ const readFJSON = (filePath, options) => {
     }
   }
 
-  return data
+  return separateMeta
+    ? [ data, _metaData ]
+    : data
 }
 
 /**
 * Set's the meta source information.
 */
-const setSource = (data, filePath) => {
+const setSource = ({ data, file }) => {
   const myMeta = ensureMyMeta(data)
-  myMeta.sourceFile = filePath
+  myMeta.sourceFile = file
 }
 
 /**
 * Writes a standard or federated JSON file by analysing the objects meta data and breaking the saved files up
 * accourding to the configuration.
 */
-const writeFJSON = ({ data, filePath, saveFrom, jsonPathToSelf }) => {
-  if (filePath === undefined) {
+const writeFJSON = ({ data, file, saveFrom, jsonPathToSelf }) => {
+  if (file === undefined) {
     const myMeta = getMyMeta(data)
-    filePath = myMeta && myMeta.sourceFile
-    if (!filePath) { throw new Error('File was not provided and no \'meta.sourceFile\' defined (or invalid).') }
+    file = myMeta?.sourceFile
+    if (!file) { throw new Error('File was not provided and no \'meta.sourceFile\' defined (or invalid).') }
   }
 
   const doSave = saveFrom === undefined || (jsonPathToSelf && testJsonPaths(saveFrom, jsonPathToSelf))
-  if (doSave && !filePath) {
-    throw new Error('No explicit filePath provided and no source found in object meta data.')
+  if (doSave && !file) {
+    throw new Error('No explicit file provided and no source found in object meta data.')
   }
 
   const mountSpecs = getMountSpecs(data)
   if (mountSpecs) {
     for (const mntSpec of mountSpecs) {
-      const { dataFile, dataDir, dataPath, mountPoint, finalKey, newData } =
+      const { file: specFile, dir, path, mountPoint, finalKey, newData } =
         processMountSpec({ mntSpec, data, preserveOriginal : true })
       data = newData
 
       const subData = mountPoint[finalKey]
       mountPoint[finalKey] = null
       // What's our save scheme? Single data file, or a scan dir?
-      if (dataFile) {
+      if (specFile) {
         writeFJSON({
           data           : subData,
-          filePath       : dataFile,
+          file       : specFile,
           saveFrom,
-          jsonPathToSelf : updatejsonPathToSelf(dataPath, jsonPathToSelf)
+          jsonPathToSelf : updatejsonPathToSelf(path, jsonPathToSelf)
         })
       }
-      else { // processMountSpec will raise an exception if neither dataFile nor dataDir is defined.
-        // We don't bother to test what 'dataDir' is. If it exists, we won't overwrite, so the subsequent attempt to
+      else { // processMountSpec will raise an exception if neither file nor dir is defined.
+        // We don't bother to test what 'dir' is. If it exists, we won't overwrite, so the subsequent attempt to
         // write a file into it can just fail if it's not of an appropriate type.
-        fs.existsSync(dataDir) || fs.mkdirSync(dataDir)
+        fs.existsSync(dir) || fs.mkdirSync(dir)
 
         for (const subKey of Object.keys(subData)) {
           writeFJSON({
             data           : subData[subKey],
-            filePath       : path.join(dataDir, `${subKey}.json`),
+            file       : fsPath.join(dir, `${subKey}.json`),
             saveFrom,
-            jsonPathToSelf : updatejsonPathToSelf(`${dataPath}.${subKey}`, jsonPathToSelf)
+            jsonPathToSelf : updatejsonPathToSelf(`${path}.${subKey}`, jsonPathToSelf)
           })
         }
       }
@@ -175,12 +246,12 @@ const writeFJSON = ({ data, filePath, saveFrom, jsonPathToSelf }) => {
 
   if (doSave) {
     const dataString = JSON.stringify(data, null, '  ')
-    const processedPath = envTemplateString(filePath)
+    const processedPath = envTemplateString(file)
     fs.writeFileSync(processedPath, dataString)
   }
 }
 
-const getMyMeta = (data) => data._meta && data._meta[FJSON_META_DATA_KEY]
+const getMyMeta = (data) => data?._meta?.[FJSON_META_DATA_KEY]
 
 const ensureMyMeta = (data) => {
   let myMeta = getMyMeta(data)
@@ -217,25 +288,20 @@ const getMountSpecs = (data) => getMyMeta(data)?.mountSpecs
 * Internal function to process a mount spec into useful components utilized by the `readFJSON` and `writeFJSON`.
 */
 const processMountSpec = ({ mntSpec, data, preserveOriginal }) => {
-  let { dataPath, dataFile, dataDir } = mntSpec
+  let { path, file, dir } = mntSpec
 
-  dataFile && dataDir // eslint-disable-line no-unused-expressions
-    && throw new Error(`Bad mount spec; cannot specify both data file (${dataFile}) and directory (${dataDir})`)
-  !dataFile && !dataDir // eslint-disable-line no-unused-expressions
+  file && dir // eslint-disable-line no-unused-expressions
+    && throw new Error(`Bad mount spec; cannot specify both data file (${file}) and directory (${dir})`)
+  !file && !dir // eslint-disable-line no-unused-expressions
     && throw new Error('Bad mount spec; neither data file nor directory.')
 
-  dataFile && (dataFile = envTemplateString(dataFile))
-  dataDir && (dataDir = envTemplateString(dataDir))
+  file && (file = envTemplateString(file))
+  dir && (dir = envTemplateString(dir))
 
-  const { penultimateRef: mountPoint, finalKey, newData } = processJSONPath({ path : dataPath, data, preserveOriginal })
+  const { penultimateRef: mountPoint, finalKey, newData } = processJSONPath({ path : path, data, preserveOriginal })
 
-  return { dataFile, dataDir, dataPath, mountPoint, finalKey, newData }
+  return { file, dir, path, mountPoint, finalKey, newData }
 }
-
-/**
-* Internal function to test for and extract link specs from the provided JSON object.
-*/
-const getLinkSpecs = (data) => getMyMeta(data)?.linkSpecs
 
 /**
 * Internal function to process a link spec into useful components utilized by the `readFJSON` and `writeFJSON`.
@@ -257,7 +323,7 @@ const shallowCopy = (input) => Array.isArray(input)
 
 const processJSONPath = ({ path, data, preserveOriginal }) => {
   if (!path) {
-    throw new Error("No 'dataPath' specified for mount spec mount point.")
+    throw new Error("No 'path' specified for mount spec mount point.")
   }
   const pathTrail = path.split('.')
   pathTrail.shift()

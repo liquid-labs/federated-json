@@ -2,7 +2,7 @@
   "_meta": {
     "com.liquid-labs.federated-json": {
       "mountSpecs": [
-        { "dataPath": ".baz", "dataFile": "${TEST_DIR}/data/baz.json" }
+        { "path": ".baz", "file": "${TEST_DIR}/data/baz.json" }
       ]
     }
   },
