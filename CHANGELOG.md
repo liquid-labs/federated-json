@@ -8,3 +8,6 @@
 * _**hotfix**_: auto lint fixes _(zane@liquid-labs.com; 2021-10-10T22:26:02.000Z)_
 * _**hotfix**_: lint fixes _(zane@liquid-labs.com; 2021-10-10T22:29:04.000Z)_
 * _**hotfix**_: make postversion script compatible with release protocol _(zane@liquid-labs.com; 2021-10-10T22:30:43.000Z)_
+
+## Release 1.0.0-alpha.20
+* _**hotfix**_: include source file in error report _(zane@liquid-labs.com; 2021-10-20T21:32:30.000Z)_
