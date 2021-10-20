@@ -115,7 +115,7 @@ const readFJSON = (...args) => {
   }
 
   for (const mntSpec of myMeta?.mountSpecs || []) {
-    const { file, dir, path, mountPoint, finalKey } = processMountSpec({ mntSpec, data })
+    const { file, dir, path, mountPoint, finalKey } = processMountSpec({ mntSpec, data, sourceFile: file })
     
     if (file) {
       let subData = readFJSON({
@@ -287,13 +287,13 @@ const getMountSpecs = (data) => getMyMeta(data)?.mountSpecs
 /**
 * Internal function to process a mount spec into useful components utilized by the `readFJSON` and `writeFJSON`.
 */
-const processMountSpec = ({ mntSpec, data, preserveOriginal }) => {
+const processMountSpec = ({ mntSpec, data, preserveOriginal, sourceFile }) => {
   let { path, file, dir } = mntSpec
 
   file && dir // eslint-disable-line no-unused-expressions
-    && throw new Error(`Bad mount spec; cannot specify both data file (${file}) and directory (${dir})`)
+    && throw new Error(`Bad mount spec; cannot specify both data file (${file}) and directory (${dir})${ sourceFile ? `; source file: ${sourceFile}` : ''}`)
   !file && !dir // eslint-disable-line no-unused-expressions
-    && throw new Error('Bad mount spec; neither data file nor directory.')
+    && throw new Error(`Bad mount spec; neither data file nor directory${ sourceFile ? `; source file: ${sourceFile}` : ''}.`)
 
   file && (file = envTemplateString(file))
   dir && (dir = envTemplateString(dir))
