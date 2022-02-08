@@ -15,3 +15,18 @@
   backoutNotes: []
   contributors:
     - Zane Rockenbaugh <zane@liquid-labs.com>
+- startTimestamp: 2022-02-08T17:23:20.876Z
+  startEpochMillis: 1644341000876
+  issues:
+    - https://github.com/Liquid-Labs/federated-json/issues/13
+  branch: 2022.02.08-zane@liquid-labs.com-support_file_overrides
+  branchFrom: fc6d1b9f713be86ea8c36d2c3c59fc5b9ae3c0be
+  workInitiator: zane@liquid-labs.com
+  branchInitiator: zane@liquid-labs.com
+  involvedProjects:
+    - "@liquid-labs/federated-json"
+  changeNotes:
+    - Support file overrides
+  securityNotes: []
+  drpBcpNotes: []
+  backoutNotes: []

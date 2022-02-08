@@ -67,17 +67,20 @@ expectedFedLinkArr2Arr._meta[FJSON_META_DATA_KEY] = Object.assign({
   }]
 },
 expectedFedLinkArr2Arr._meta[FJSON_META_DATA_KEY])
+
+const expectedDataDir = {
+  bar : [1, 2, 3],
+  baz : { stuff : true },
+  foo : 'foo'
+}
+
 const expectedScanResult = {
   _meta : {
     'com.liquid-labs.federated-json' : { // eslint-disable-next-line no-template-curly-in-string
       mountSpecs : [{ dir : '${TEST_DIR}/data/datadir', path : '.data' }]
     }
   },
-  data : {
-    bar : [1, 2, 3],
-    baz : { stuff : true },
-    foo : 'foo'
-  }
+  data : expectedDataDir
 }
 
 const mkEntry = (description, file, expected) => ({
@@ -151,6 +154,22 @@ const readFJSONTests = () => {
     test('throws useful error when no data source is empty in mnt spec', () => {
       const badMntSpec = `${testpath}/bad-mnt-spec-empty-data-path.json`
       expect(() => { readFJSON(badMntSpec) }).toThrow(/No 'path' specified/)
+    })
+    
+    describe('overrides', () => {
+      test("can replace a 'dir' with a 'file'", () =>
+        expect(readFJSON(testpath + '/data-dir.json',
+            { overrides: { '.data': `file:${testpath}/baz.json` } }).data)
+          .toEqual("just a string"))
+      
+      test("can replace a 'file' with a 'dir'", () =>
+        expect(readFJSON(testpath + '/foo-bar.json',
+            { overrides: { '.baz': `dir:${testpath}/datadir` } }).baz)
+          .toEqual(expectedDataDir))
+      
+      test('will throw when missing the type indicator', () =>
+        expect(() => readFJSON(testpath + '/data-dir.json',
+            { overrides: { '.data': `${testpath}/baz.json` } })).toThrow())
     })
   })
 }
