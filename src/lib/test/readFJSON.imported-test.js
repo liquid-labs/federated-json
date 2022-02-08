@@ -155,21 +155,21 @@ const readFJSONTests = () => {
       const badMntSpec = `${testpath}/bad-mnt-spec-empty-data-path.json`
       expect(() => { readFJSON(badMntSpec) }).toThrow(/No 'path' specified/)
     })
-    
+
     describe('overrides', () => {
       test("can replace a 'dir' with a 'file'", () =>
         expect(readFJSON(testpath + '/data-dir.json',
-            { overrides: { '.data': `file:${testpath}/baz.json` } }).data)
-          .toEqual("just a string"))
-      
+          { overrides : { '.data' : `file:${testpath}/baz.json` } }).data)
+          .toEqual('just a string'))
+
       test("can replace a 'file' with a 'dir'", () =>
         expect(readFJSON(testpath + '/foo-bar.json',
-            { overrides: { '.baz': `dir:${testpath}/datadir` } }).baz)
+          { overrides : { '.baz' : `dir:${testpath}/datadir` } }).baz)
           .toEqual(expectedDataDir))
-      
+
       test('will throw when missing the type indicator', () =>
         expect(() => readFJSON(testpath + '/data-dir.json',
-            { overrides: { '.data': `${testpath}/baz.json` } })).toThrow())
+          { overrides : { '.data' : `${testpath}/baz.json` } })).toThrow())
     })
   })
 }
