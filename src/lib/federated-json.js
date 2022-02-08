@@ -43,13 +43,13 @@ const jsonRE = /\.json$/
 * files.
 */
 const readFJSON = (...args) => {
-  let file, rememberSource, separateMeta, _metaData, _metaPaths, _rootPath
+  let file, overrides, rememberSource, separateMeta, _metaData, _metaPaths, _rootPath
   if (!args || args.length === 0) throw new Error("Invalid 'no argument' call to readFJSON.")
   else if (typeof args[0] === 'string') {
     file = args[0]
     if (args.length === 2) {
       if (typeof args[1] === 'object')
-        ({ rememberSource, separateMeta, _metaData, _metaPaths, _rootPath } = args[1]);
+        ({ overrides, rememberSource, separateMeta, _metaData, _metaPaths, _rootPath } = args[1]);
       else throw new Error("Unexpected second argument to readFJSON; expects options object.")
     }
     else if (args.length !== 1)
@@ -60,7 +60,7 @@ const readFJSON = (...args) => {
       throw new Error("Invalid call to readFJSON; when passing options as first arg, it must be the only arg.")
     };
     
-    ({ file, rememberSource, separateMeta, _metaData, _metaPaths, _rootPath } = args[0]);
+    ({ file, overrides, rememberSource, separateMeta, _metaData, _metaPaths, _rootPath } = args[0]);
   }
   
   if (!file) { throw new Error(`File path invalid. (${file})`) }
@@ -115,11 +115,12 @@ const readFJSON = (...args) => {
   }
 
   for (const mntSpec of myMeta?.mountSpecs || []) {
-    const { file, dir, path, mountPoint, finalKey } = processMountSpec({ mntSpec, data, sourceFile: file })
+    const { file, dir, path, mountPoint, finalKey } = processMountSpec({ mntSpec, data, overrides, sourceFile: file })
     
     if (file) {
       let subData = readFJSON({
         file,
+        overrides,
         rememberSource,
         separateMeta,
         _metaData,
@@ -144,6 +145,7 @@ const readFJSON = (...args) => {
         const mntPnt = dirFile.replace(jsonRE, '')
         let subData = readFJSON({
           file: fsPath.join(dir, dirFile),
+          overrides,
           rememberSource,
           separateMeta,
           _metaData,
@@ -287,13 +289,27 @@ const getMountSpecs = (data) => getMyMeta(data)?.mountSpecs
 /**
 * Internal function to process a mount spec into useful components utilized by the `readFJSON` and `writeFJSON`.
 */
-const processMountSpec = ({ mntSpec, data, preserveOriginal, sourceFile }) => {
+const processMountSpec = ({ mntSpec, data, overrides, preserveOriginal, sourceFile }) => {
   let { path, file, dir } = mntSpec
-
-  file && dir // eslint-disable-line no-unused-expressions
-    && throw new Error(`Bad mount spec; cannot specify both data file (${file}) and directory (${dir})${ sourceFile ? `; source file: ${sourceFile}` : ''}`)
-  !file && !dir // eslint-disable-line no-unused-expressions
-    && throw new Error(`Bad mount spec; neither data file nor directory${ sourceFile ? `; source file: ${sourceFile}` : ''}.`)
+  if (overrides !== undefined && path in overrides) {
+    const override = overrides[path]
+    if (override.startsWith('file:')) {
+      file = override.substring(5)
+      dir = undefined
+    }
+    else if (override.startsWith('dir:')) {
+      dir = override.substring(4)
+      file = undefined
+    }
+    else
+      throw new Error(`Cannot parse override spec '${override}'. Override spec must start with 'file:' or 'dir:'.`)
+  }
+  else {
+    file && dir // eslint-disable-line no-unused-expressions
+      && throw new Error(`Bad mount spec; cannot specify both data file (${file}) and directory (${dir})${ sourceFile ? `; source file: ${sourceFile}` : ''}`)
+    !file && !dir // eslint-disable-line no-unused-expressions
+      && throw new Error(`Bad mount spec; neither data file nor directory${ sourceFile ? `; source file: ${sourceFile}` : ''}.`)
+  }
 
   file && (file = envTemplateString(file))
   dir && (dir = envTemplateString(dir))
