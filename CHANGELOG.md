@@ -11,3 +11,8 @@
 
 ## Release 1.0.0-alpha.20
 * _**hotfix**_: include source file in error report _(zane@liquid-labs.com; 2021-10-20T21:32:30.000Z)_
+
+## Release 1.0.0-alpha.21
+* Support file overrides _(zane@liquid-labs.com; 2022-02-08T17:23:20.876Z)_
+* _**hotfix**_: updated CHANGELOGE.md for release (by liq) _(zane@liquid-labs.com; 2022-02-08T17:47:32.000Z)_
+* _**hotfix**_: lint fixes _(zane@liquid-labs.com; 2022-02-08T17:47:55.000Z)_
