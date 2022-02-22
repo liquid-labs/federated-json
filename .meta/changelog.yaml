@@ -7,6 +7,9 @@
   workInitiator: zane@liquid-labs.com
   branchInitiator: zane@liquid-labs.com
   involvedProjects:
+    - "@liquid-labs/liq-alerts"
+    - "@liquid-labs/liq-core"
+    - "@liquid-labs/orgs-model"
     - "@liquid-labs/federated-json"
   changeNotes:
     - Finish linking support
