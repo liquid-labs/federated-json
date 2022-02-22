@@ -81,8 +81,11 @@ const readFJSON = (...args) => {
     }
   }
 
-  if (rememberSource === true && typeof data === 'object' && !Array.isArray(data)) {
-    setSource({ data, file })
+  if (rememberSource === true) {
+    if (typeof data === 'object' && !Array.isArray(data))
+      setSource({ data, file })
+    else if (Array.isArray(data))
+      data.sourceFile = file
   }
 
   let requireMeta = false
@@ -201,9 +204,8 @@ const setSource = ({ data, file }) => {
 */
 const writeFJSON = ({ data, file, saveFrom, jsonPathToSelf }) => {
   if (file === undefined) {
-    const myMeta = getMyMeta(data)
-    file = myMeta?.sourceFile
-    if (!file) { throw new Error('File was not provided and no \'meta.sourceFile\' defined (or invalid).') }
+    file = getSourceFile(data)
+    if (!file) { throw new Error('File was not provided (or invalid) nor did we find a "remembered source".') }
   }
 
   const doSave = saveFrom === undefined || (jsonPathToSelf && testJsonPaths(saveFrom, jsonPathToSelf))
@@ -264,6 +266,17 @@ const ensureMyMeta = (data) => {
   }
 
   return myMeta
+}
+
+const getSourceFile = (data) => {
+  if (typeof data === 'object' && !Array.isArray(data)) {
+    const myMeta = getMyMeta(data)
+    return myMeta?.sourceFile
+  }
+  else if (Array.isArray(data)) {
+    return data.sourceFile
+  }
+  return undefined
 }
 
 /**
@@ -371,7 +384,7 @@ const write = writeFJSON
 const read = readFJSON
 
 export {
-  addMountPoint, readFJSON, setSource, writeFJSON, // standard interface
+  addMountPoint, getSourceFile, readFJSON, setSource, writeFJSON, // standard interface
   FJSON_META_DATA_KEY, // possibly useful? may be removed before '1.0'
   write, read // aliases
 }
