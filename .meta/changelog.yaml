@@ -7,6 +7,9 @@
   workInitiator: zane@liquid-labs.com
   branchInitiator: zane@liquid-labs.com
   involvedProjects:
+    - "@liquid-labs/liq-alerts"
+    - "@liquid-labs/liq-core"
+    - "@liquid-labs/orgs-model"
     - "@liquid-labs/federated-json"
   changeNotes:
     - Finish linking support
@@ -27,6 +30,25 @@
     - "@liquid-labs/federated-json"
   changeNotes:
     - Support file overrides
+  securityNotes: []
+  drpBcpNotes: []
+  backoutNotes: []
+- startTimestamp: 2022-02-22T23:03:45.301Z
+  startEpochMillis: 1645571025301
+  issues:
+    - https://github.com/Liquid-Labs/liq-alerts/issues/1
+    - https://github.com/Liquid-Labs/liq-core/issues/44
+  branch: 2022.02.21-zane@liquid-labs.com-initial_implementation
+  branchFrom: 0dad809dc2e77df607cf25a2984f2a747433995e
+  workInitiator: zane@liquid-labs.com
+  branchInitiator: zane@liquid-labs.com
+  involvedProjects:
+    - "@liquid-labs/liq-alerts"
+    - "@liquid-labs/liq-core"
+    - "@liquid-labs/orgs-model"
+    - "@liquid-labs/federated-json"
+  changeNotes:
+    - Initial implementation
   securityNotes: []
   drpBcpNotes: []
   backoutNotes: []

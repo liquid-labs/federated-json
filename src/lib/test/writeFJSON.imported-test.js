@@ -209,7 +209,12 @@ const writeFJSONTests = () => {
               expect(preStats[key]).toEqual(postStats[key])
             }
             const leafContents = fs.readFileSync(`${testStagingpath}/datadir/${key}.json`)
-            expect(JSON.parse(leafContents)).toEqual(data.data[key])
+            let leafData = data.data[key]
+            if (Array.isArray(leafData)) {
+              // because there is an attached '.sourceFile'
+              leafData = [...leafData]
+            }
+            expect(JSON.parse(leafContents)).toEqual(leafData)
           })
         })
       })
