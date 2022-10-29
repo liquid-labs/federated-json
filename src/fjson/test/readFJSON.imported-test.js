@@ -1,4 +1,4 @@
-/* global beforeAll, describe expect test */
+/* global describe expect test */
 
 import { lastModificationMs, readFJSON, FJSON_META_DATA_KEY } from '../federated-json'
 import { EMPTY_OBJ_SRC, testpath } from './shared-test-data'
@@ -103,12 +103,12 @@ const readTable = [
 const readFJSONTests = () => {
   describe('readFJSON', () => {
     test.each(readTable)('loads $description', ({ file, expected }) => {
-      const data = readFJSON(file, { noMtime: true })
+      const data = readFJSON(file, { noMtime : true })
       expect(data).toEqual(expected)
     })
 
     test.each(readTable)('loads $description with separate meta', ({ file, expected }) => {
-      const [data, meta] = readFJSON({ file, noMtime: true, separateMeta : true })
+      const [data, meta] = readFJSON({ file, noMtime : true, separateMeta : true })
       const noMetaExpected = typeof expected === 'object'
         ? Object.assign({}, expected)
         : expected
@@ -125,7 +125,7 @@ const readFJSONTests = () => {
     })
 
     test('can remember the source', () => {
-      const data = readFJSON(EMPTY_OBJ_SRC, { noMtime: true, rememberSource : true })
+      const data = readFJSON(EMPTY_OBJ_SRC, { noMtime : true, rememberSource : true })
       expect(data).toEqual({ _meta : { [FJSON_META_DATA_KEY] : { sourceFile : EMPTY_OBJ_SRC } } })
     })
 
@@ -165,8 +165,8 @@ const readFJSONTests = () => {
       test("can replace a 'file' with a 'dir'", () =>
         expect(readFJSON(testpath + '/foo-bar.json',
           {
-            noMtime: true,
-            overrides : { '.baz' : `dir:${testpath}/datadir` },
+            noMtime   : true,
+            overrides : { '.baz' : `dir:${testpath}/datadir` }
           }).baz)
           .toEqual(expectedDataDir))
 
@@ -174,13 +174,13 @@ const readFJSONTests = () => {
         expect(() => readFJSON(testpath + '/data-dir.json',
           { overrides : { '.data' : `${testpath}/baz.json` } })).toThrow())
     })
-    
+
     describe('lastModificationMs', () => {
       test('works with sub-file reads', () => {
         const data = readFJSON(testpath + '/foo-bar.json')
         expect(lastModificationMs(data)).toBeTruthy()
       })
-      
+
       test('works with directory reads', () => {
         const data = readFJSON(testpath + '/data-dir.json')
         expect(lastModificationMs(data)).toBeTruthy()
