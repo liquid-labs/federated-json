@@ -19,3 +19,11 @@
 
 ## Release 1.0.0-alpha.22
 * Initial implementation _(zane@liquid-labs.com; 2022-02-22T23:03:45.301Z)_
+
+## Release 1.0.0-alpha.23
+* _**hotfix**_: update dependencies _(zane@liquid-labs.com; 2022-10-29T16:52:38.000Z)_
+* _**hotfix**_: normalized directory structure; 'bin'->'cli', 'lib'->'fjson' _(zane@liquid-labs.com; 2022-10-29T17:07:02.000Z)_
+* _**hotfix**_: add 'node:' delineator to node core pkg imports _(zane@liquid-labs.com; 2022-10-29T17:12:31.000Z)_
+* _**hotfix**_: now supports (kind of) tracking the data's 'last modified time' _(zane@liquid-labs.com; 2022-10-29T19:24:33.000Z)_
+* _**hotfix**_: lint fixes _(zane@liquid-labs.com; 2022-10-29T19:24:54.000Z)_
+* _**hotfix**_: updated CHANGELOGE.md for release (by liq) _(zane@liquid-labs.com; 2022-10-29T19:25:14.000Z)_
