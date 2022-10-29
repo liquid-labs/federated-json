@@ -43,24 +43,23 @@ const jsonRE = /\.json$/
 * files.
 */
 const readFJSON = (...args) => {
-  let file, overrides, rememberSource, separateMeta, _metaData, _metaPaths, _rootPath
+  let file, noMtime, overrides, rememberSource, separateMeta, _metaData, _metaDatas, _metaPaths, _rootPath
   if (!args || args.length === 0) throw new Error("Invalid 'no argument' call to readFJSON.")
+  else if (args.length > 2) throw new Error("Invalid call to readFJSON; try expects (string, options) or (options).")
   else if (typeof args[0] === 'string') {
     file = args[0]
-    if (args.length === 2) {
-      if (typeof args[1] === 'object')
-        ({ overrides, rememberSource, separateMeta, _metaData, _metaPaths, _rootPath } = args[1]);
-      else throw new Error("Unexpected second argument to readFJSON; expects options object.")
+    if (args.length === 2 && args[1] && typeof args[1] !== 'object') {
+      throw new Error("Unexpected second argument to readFJSON; expects options object.")
     }
-    else if (args.length !== 1)
-      throw new Error("Invalid call to readFJSON; try expects (string, options) or (options).")
+    ({ noMtime = false, overrides, rememberSource, separateMeta, _metaData, _metaDatas = [], _metaPaths, _rootPath } = args[1] || {});
+    
   }
   else { // treat args[0] as object and see what happens!
     if (args.length > 1) {
       throw new Error("Invalid call to readFJSON; when passing options as first arg, it must be the only arg.")
     };
     
-    ({ file, overrides, rememberSource, separateMeta, _metaData, _metaPaths, _rootPath } = args[0]);
+    ({ file, noMtime = false, overrides, rememberSource, separateMeta, _metaData, _metaDatas = [], _metaPaths, _rootPath } = args[0]);
   }
   
   if (!file) { throw new Error(`File path invalid. (${file})`) }
@@ -88,6 +87,15 @@ const readFJSON = (...args) => {
     else if (Array.isArray(data))
       data.sourceFile = file
   }
+  if (noMtime === false) {
+    const { mtimeMs } = fs.statSync(processedPath)
+    if (typeof data === 'object' && !Array.isArray(data)) {
+      const myMeta = ensureMyMeta(data)
+      myMeta.myMtimeMs = mtimeMs
+    }
+    else if (Array.isArray(data))
+      data.myMtimeMs = mtimeMs
+  }
 
   let requireMeta = false
   // this should only be true for the root object, se we initaliez the structures here and then pass them through as we
@@ -97,8 +105,10 @@ const readFJSON = (...args) => {
     _metaPaths = []
   }
   
-  const myMeta = getMyMeta(data)
+  let myMeta = getMyMeta(data)
   if (myMeta !== undefined) {
+    _metaDatas?.push(myMeta) // TODO: how is _metaDatas undefined? Happens if the meta data is invalid.
+    
     const myPath = _rootPath || '.'
     _metaPaths.push(myPath)
     // TODO: currently limited to mount paths traversing objects only
@@ -117,6 +127,9 @@ const readFJSON = (...args) => {
     currMetaRef._meta = { [FJSON_META_DATA_KEY] : myMeta }
     _metaData = currMetaRef
   }
+  else {
+    myMeta = {}
+  }
 
   for (const mntSpec of myMeta?.mountSpecs || []) {
     const { file: subFile, dir, path, mountPoint, finalKey } =
@@ -125,10 +138,12 @@ const readFJSON = (...args) => {
     if (subFile) {
       let subData = readFJSON({
         file: subFile,
+        noMtime,
         overrides,
         rememberSource,
         separateMeta,
         _metaData,
+        _metaDatas,
         _metaPaths,
         _rootPath: `${_rootPath || ''}${path}`
       })
@@ -150,10 +165,12 @@ const readFJSON = (...args) => {
         const mntPnt = dirFile.replace(jsonRE, '')
         let subData = readFJSON({
           file: fsPath.join(dir, dirFile),
+          noMtime,
           overrides,
           rememberSource,
           separateMeta,
           _metaData,
+          _metaDatas,
           _metaPaths,
           _rootPath: `${_rootPath || ''}${path}`
         })
@@ -164,6 +181,10 @@ const readFJSON = (...args) => {
         mntObj[mntPnt] = subData
       }
     }
+  }
+  if (noMtime === false) {
+    // TODO: is only guaranteed to be correct for the top level data; otherwise the '_metaDatas' might have meta data from data which is not sub-data of the current data
+    myMeta.mtimeMs = _metaDatas.reduce((acc, m) => m.myMtimeMs > acc ? m.myMtimeMs : acc, 0)
   }
 
   for (const lnkSpec of myMeta?.linkSpecs || []) {
@@ -334,6 +355,8 @@ const processMountSpec = ({ mntSpec, data, overrides, preserveOriginal, sourceFi
   return { file, dir, path, mountPoint, finalKey, newData }
 }
 
+const lastModificationMs = (data, selfOnly = false) => getMyMeta(data).mtimeMs
+
 /**
 * Internal function to process a link spec into useful components utilized by the `readFJSON` and `writeFJSON`.
 */
@@ -386,7 +409,16 @@ const write = writeFJSON
 const read = readFJSON
 
 export {
-  addMountPoint, getSourceFile, readFJSON, setSource, writeFJSON, // standard interface
+  // standard interface
+  //   manipulation methods
+  addMountPoint,
+  getSourceFile,
+  readFJSON,
+  setSource,
+  writeFJSON,
+  //   informational
+  lastModificationMs,
+  // etc
   FJSON_META_DATA_KEY, // possibly useful? may be removed before '1.0'
   write, read // aliases
 }
