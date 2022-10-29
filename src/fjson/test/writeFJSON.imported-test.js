@@ -1,6 +1,6 @@
 /* global beforeAll describe expect test */
-import * as fs from 'fs'
-import * as fsPath from 'path'
+import * as fs from 'node:fs'
+import * as fsPath from 'node:path'
 
 import { readFJSON, writeFJSON, FJSON_META_DATA_KEY, setSource } from '../federated-json'
 import { testDir, testpath } from './shared-test-data'

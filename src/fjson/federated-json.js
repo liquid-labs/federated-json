@@ -4,8 +4,8 @@
 * data path is split on '/' and each element is treated as a string. Therefore, the path is compatible with object keys
 * but does not support arrays.
 */
-import * as fs from 'fs'
-import * as fsPath from 'path'
+import * as fs from 'node:fs'
+import * as fsPath from 'node:path'
 
 import { envTemplateString, testJsonPaths } from './utils'
 
@@ -70,6 +70,7 @@ const readFJSON = (...args) => {
     const msg = `No such file: '${file}'` + (file !== processedPath ? ` ('${processedPath}')` : '')
     throw new Error(msg)
   }
+  
   const dataBits = fs.readFileSync(processedPath)
   let data // actually, would love 'const', but need to set inside try block and don'w want to expand scope of the try.
   try {
