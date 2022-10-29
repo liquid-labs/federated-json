@@ -1,4 +1,4 @@
-import * as fjson from '../lib/federated-json'
+import * as fjson from '../fjson/federated-json'
 
 const data = {
   "foo": {

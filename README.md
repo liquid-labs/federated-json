@@ -12,7 +12,7 @@ npm i @liquid-labs/federated-json
 
 Example from `src/example/example.js`:
 ```javascript
-import * as fjson from '../lib/federated-json'
+import * as fjson from '../fjson/federated-json'
 
 const data = {
   "foo": {
@@ -38,4 +38,3 @@ const [ dataOnly, metaData ] = fjson.read('./data.json', { separateMeta : true }
 console.log("\nSeparate meta-data:\n", JSON.stringify(metaData, null, 2))
 console.log("\nSeparate data:\n", JSON.stringify(dataOnly, null, 2))
 ```
-

@@ -118,11 +118,12 @@ const readFJSON = (...args) => {
   }
 
   for (const mntSpec of myMeta?.mountSpecs || []) {
-    const { file, dir, path, mountPoint, finalKey } = processMountSpec({ mntSpec, data, overrides, sourceFile: file })
+    const { file: subFile, dir, path, mountPoint, finalKey } =
+      processMountSpec({ mntSpec, data, overrides, sourceFile: file })
     
-    if (file) {
+    if (subFile) {
       let subData = readFJSON({
-        file,
+        file: subFile,
         overrides,
         rememberSource,
         separateMeta,
