@@ -107,7 +107,7 @@ const readFJSON = (...args) => {
   
   let myMeta = getMyMeta(data)
   if (myMeta !== undefined) {
-    _metaDatas?.push(myMeta) // TODO: how is _metaDatas undefined? Happens if the meta data is invalid.
+    _metaDatas.push(myMeta)
     
     const myPath = _rootPath || '.'
     _metaPaths.push(myPath)
