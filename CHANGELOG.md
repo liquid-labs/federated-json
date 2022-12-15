@@ -27,3 +27,9 @@
 * _**hotfix**_: now supports (kind of) tracking the data's 'last modified time' _(zane@liquid-labs.com; 2022-10-29T19:24:33.000Z)_
 * _**hotfix**_: lint fixes _(zane@liquid-labs.com; 2022-10-29T19:24:54.000Z)_
 * _**hotfix**_: updated CHANGELOGE.md for release (by liq) _(zane@liquid-labs.com; 2022-10-29T19:25:14.000Z)_
+
+## Release 1.0.0-alpha.24
+* _**hotfix**_: fix build for publish _(zane@liquid-labs.com; 2022-10-29T19:37:19.000Z)_
+* _**hotfix**_: removed now unnecessary non-null check _(zane@liquid-labs.com; 2022-10-29T19:50:51.000Z)_
+* _**hotfix**_: add 'noMeta' option to writeFJSON _(zane@liquid-labs.com; 2022-12-15T17:54:05.000Z)_
+* _**hotfix**_: audit fixes _(zane@liquid-labs.com; 2022-12-15T17:54:36.000Z)_
