@@ -225,7 +225,7 @@ const setSource = ({ data, file }) => {
 * Writes a standard or federated JSON file by analysing the objects meta data and breaking the saved files up
 * accourding to the configuration.
 */
-const writeFJSON = ({ data, file, saveFrom, jsonPathToSelf }) => {
+const writeFJSON = ({ data, file, noMeta=false, saveFrom, jsonPathToSelf }) => {
   if (file === undefined) {
     file = getSourceFile(data)
     if (!file) { throw new Error('File was not provided (or invalid) nor did we find a "remembered source".') }
@@ -250,6 +250,7 @@ const writeFJSON = ({ data, file, saveFrom, jsonPathToSelf }) => {
         writeFJSON({
           data           : subData,
           file       : specFile,
+          noMeta,
           saveFrom,
           jsonPathToSelf : updatejsonPathToSelf(path, jsonPathToSelf)
         })
@@ -263,6 +264,7 @@ const writeFJSON = ({ data, file, saveFrom, jsonPathToSelf }) => {
           writeFJSON({
             data           : subData[subKey],
             file       : fsPath.join(dir, `${subKey}.json`),
+            noMeta,
             saveFrom,
             jsonPathToSelf : updatejsonPathToSelf(`${path}.${subKey}`, jsonPathToSelf)
           })
@@ -272,6 +274,7 @@ const writeFJSON = ({ data, file, saveFrom, jsonPathToSelf }) => {
   }
 
   if (doSave) {
+    if (noMeta === true) delete data._meta
     const dataString = JSON.stringify(data, null, '  ')
     const processedPath = envTemplateString(file)
     fs.writeFileSync(processedPath, dataString)
