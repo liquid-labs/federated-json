@@ -225,7 +225,7 @@ const setSource = ({ data, file }) => {
 * Writes a standard or federated JSON file by analysing the objects meta data and breaking the saved files up
 * accourding to the configuration.
 */
-const writeFJSON = ({ data, file, noMeta=false, saveFrom, jsonPathToSelf }) => {
+const writeFJSON = ({ noCreateDirs=false, data, file, noMeta=false, saveFrom, jsonPathToSelf }) => {
   if (file === undefined) {
     file = getSourceFile(data)
     if (!file) { throw new Error('File was not provided (or invalid) nor did we find a "remembered source".') }
@@ -255,11 +255,7 @@ const writeFJSON = ({ data, file, noMeta=false, saveFrom, jsonPathToSelf }) => {
           jsonPathToSelf : updatejsonPathToSelf(path, jsonPathToSelf)
         })
       }
-      else { // processMountSpec will raise an exception if neither file nor dir is defined.
-        // We don't bother to test what 'dir' is. If it exists, we won't overwrite, so the subsequent attempt to
-        // write a file into it can just fail if it's not of an appropriate type.
-        fs.existsSync(dir) || fs.mkdirSync(dir)
-
+      else {
         for (const subKey of Object.keys(subData)) {
           writeFJSON({
             data           : subData[subKey],
@@ -277,6 +273,9 @@ const writeFJSON = ({ data, file, noMeta=false, saveFrom, jsonPathToSelf }) => {
     if (noMeta === true) delete data._meta
     const dataString = JSON.stringify(data, null, '  ')
     const processedPath = envTemplateString(file)
+    if (noCreateDirs === false) {
+      fs.mkdirSync(fsPath.dirname(processedPath), { recursive: true })
+    }
     fs.writeFileSync(processedPath, dataString)
   }
 }
