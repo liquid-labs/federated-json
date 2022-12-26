@@ -185,6 +185,7 @@ const readFJSONTests = () => {
     describe('overrides', () => {
       test("can replace a 'dir' with a 'file'", () =>
         expect(readFJSON(testpath + '/data-dir.json',
+          // eslint-disable-next-line no-template-curly-in-string
           { overrides : { '.data' : 'file:${TEST_DIR}/data/baz.json' } }).data)
           .toEqual('just a string'))
 
@@ -192,6 +193,7 @@ const readFJSONTests = () => {
         expect(readFJSON(testpath + '/foo-bar.json',
           {
             noMtime   : true,
+            // eslint-disable-next-line no-template-curly-in-string
             overrides : { '.baz' : 'dir:${TEST_DIR}/data/datadir' }
           }).baz)
           .toEqual(expectedDataDir))

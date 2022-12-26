@@ -35,7 +35,10 @@
   "homepage": "https://github.com/Liquid-Labs/federated-json#readme",
   "liq": {
     "packageType": "node|lib|cli",
-    "orgBase": "git@github.com:Liquid-Labs/Liquid-Labs.git"
+    "orgBase": "git@github.com:Liquid-Labs/Liquid-Labs.git",
+    "eslint": {
+      "target": "./src/fjson"
+    }
   },
   "devDependencies": {
     "@liquid-labs/bash-rollup": "^1.0.0-alpha.6",

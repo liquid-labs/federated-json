@@ -41,32 +41,31 @@ const jsonRE = /\.json$/
 /**
 * Reads a JSON file and processes for federated mount points to construct a composite JSON object from one or more
 * files. May take a single `file` optinally followed by an options object or a single options object containing a `file` option.
-* 
+*
 * ### Options
 *
 * - `file`: (req) the path to the root file.
-* - `noMtime`: by default, the root files 'modified time' is calculated and stored as `myMeta`. The calculated mtime is greatest mtime of all the federated 
+* - `noMtime`: by default, the root files 'modified time' is calculated and stored as `myMeta`. The calculated mtime is greatest mtime of all the federated
 */
 const readFJSON = (...args) => {
   let file, noMtime, overrides, rememberSource, separateMeta, _contextPath, _metaData, _metaDatas, _metaPaths, _rootPath
   if (!args || args.length === 0) throw new Error("Invalid 'no argument' call to readFJSON.")
-  else if (args.length > 2) throw new Error("Invalid call to readFJSON; try expects (string, options) or (options).")
+  else if (args.length > 2) throw new Error('Invalid call to readFJSON; try expects (string, options) or (options).')
   else if (typeof args[0] === 'string') {
     file = args[0]
     if (args.length === 2 && args[1] && typeof args[1] !== 'object') {
-      throw new Error("Unexpected second argument to readFJSON; expects options object.")
+      throw new Error('Unexpected second argument to readFJSON; expects options object.')
     }
-    ({ noMtime = false, overrides, rememberSource, separateMeta, _contextPath, _metaData, _metaDatas = [], _metaPaths, _rootPath } = args[1] || {});
-    
+    ({ noMtime = false, overrides, rememberSource, separateMeta, _contextPath, _metaData, _metaDatas = [], _metaPaths, _rootPath } = args[1] || {})
   }
   else { // treat args[0] as object and see what happens!
     if (args.length > 1) {
-      throw new Error("Invalid call to readFJSON; when passing options as first arg, it must be the only arg.")
-    };
-    
-    ({ file, noMtime = false, overrides, rememberSource, separateMeta, _contextPath, _metaData, _metaDatas = [], _metaPaths, _rootPath } = args[0]);
+      throw new Error('Invalid call to readFJSON; when passing options as first arg, it must be the only arg.')
+    }
+
+    ({ file, noMtime = false, overrides, rememberSource, separateMeta, _contextPath, _metaData, _metaDatas = [], _metaPaths, _rootPath } = args[0])
   }
-  
+
   if (!file) { throw new Error(`File path invalid. (${file})`) }
 
   const processedPath = processPath(file, _contextPath)
@@ -74,7 +73,7 @@ const readFJSON = (...args) => {
     const msg = `No such file: '${file}'` + (file !== processedPath ? ` ('${processedPath}')` : '')
     throw new Error(msg)
   }
-  
+
   const dataBits = fs.readFileSync(processedPath)
   let data // actually, would love 'const', but need to set inside try block and don'w want to expand scope of the try.
   try {
@@ -87,10 +86,8 @@ const readFJSON = (...args) => {
   }
 
   if (rememberSource === true) {
-    if (typeof data === 'object' && !Array.isArray(data))
-      setSource({ data, file })
-    else if (Array.isArray(data))
-      data.sourceFile = file
+    if (typeof data === 'object' && !Array.isArray(data)) { setSource({ data, file }) }
+    else if (Array.isArray(data)) { data.sourceFile = file }
   }
   if (noMtime === false) {
     const { mtimeMs } = fs.statSync(processedPath)
@@ -98,22 +95,20 @@ const readFJSON = (...args) => {
       const myMeta = ensureMyMeta(data)
       myMeta.myMtimeMs = mtimeMs
     }
-    else if (Array.isArray(data))
-      data.myMtimeMs = mtimeMs
+    else if (Array.isArray(data)) { data.myMtimeMs = mtimeMs }
   }
 
-  let requireMeta = false
   // this should only be true for the root object, se we initaliez the structures here and then pass them through as we
   // process the sub-files
   if (_metaData === undefined) {
     _metaData = {}
     _metaPaths = []
   }
-  
+
   let myMeta = getMyMeta(data)
   if (myMeta !== undefined) {
     _metaDatas.push(myMeta)
-    
+
     const myPath = _rootPath || '.'
     _metaPaths.push(myPath)
     // TODO: currently limited to mount paths traversing objects only
@@ -138,20 +133,20 @@ const readFJSON = (...args) => {
 
   for (const mntSpec of myMeta?.mountSpecs || []) {
     const { file: subFile, dir, path, mountPoint, finalKey } =
-      processMountSpec({ data, mntSpec, overrides, sourceFile: file })
-    
+      processMountSpec({ data, mntSpec, overrides, sourceFile : file })
+
     if (subFile) {
       let subData = readFJSON({
-        file: subFile,
+        file         : subFile,
         noMtime,
         overrides,
         rememberSource,
         separateMeta,
-        _contextPath: processedPath,
+        _contextPath : processedPath,
         _metaData,
         _metaDatas,
         _metaPaths,
-        _rootPath: `${_rootPath || ''}${path}`
+        _rootPath    : `${_rootPath || ''}${path}`
       })
       if (separateMeta === true) {
         subData = subData[0]
@@ -170,16 +165,16 @@ const readFJSON = (...args) => {
       for (const dirFile of files) {
         const mntPnt = dirFile.replace(jsonRE, '')
         let subData = readFJSON({
-          file: fsPath.join(dir, dirFile),
+          file         : fsPath.join(dir, dirFile),
           noMtime,
           overrides,
           rememberSource,
           separateMeta,
-          _contextPath: processedPath,
+          _contextPath : processedPath,
           _metaData,
           _metaDatas,
           _metaPaths,
-          _rootPath: `${_rootPath || ''}${path}`
+          _rootPath    : `${_rootPath || ''}${path}`
         })
         if (separateMeta === true) {
           subData = subData[0]
@@ -216,7 +211,7 @@ const readFJSON = (...args) => {
   }
 
   return separateMeta
-    ? [ data, _metaData ]
+    ? [data, _metaData]
     : data
 }
 
@@ -232,7 +227,7 @@ const setSource = ({ data, file }) => {
 * Writes a standard or federated JSON file by analysing the objects meta data and breaking the saved files up
 * accourding to the configuration.
 */
-const writeFJSON = ({ noCreateDirs=false, data, file, noMeta=false, saveFrom, jsonPathToSelf, _contextPath }) => {
+const writeFJSON = ({ noCreateDirs = false, data, file, noMeta = false, saveFrom, jsonPathToSelf, _contextPath }) => {
   if (file === undefined) {
     file = getSourceFile(data)
     if (!file) { throw new Error('File was not provided (or invalid) nor did we find a "remembered source".') }
@@ -258,22 +253,22 @@ const writeFJSON = ({ noCreateDirs=false, data, file, noMeta=false, saveFrom, js
       if (specFile) {
         writeFJSON({
           data           : subData,
-          file       : specFile,
+          file           : specFile,
           noMeta,
           saveFrom,
           jsonPathToSelf : updatejsonPathToSelf(path, jsonPathToSelf),
-          _contextPath: processedPath
+          _contextPath   : processedPath
         })
       }
       else {
         for (const subKey of Object.keys(subData)) {
           writeFJSON({
             data           : subData[subKey],
-            file       : fsPath.join(dir, `${subKey}.json`),
+            file           : fsPath.join(dir, `${subKey}.json`),
             noMeta,
             saveFrom,
             jsonPathToSelf : updatejsonPathToSelf(`${path}.${subKey}`, jsonPathToSelf),
-            _contextPath: processedPath
+            _contextPath   : processedPath
           })
         }
       }
@@ -284,7 +279,7 @@ const writeFJSON = ({ noCreateDirs=false, data, file, noMeta=false, saveFrom, js
     if (noMeta === true) delete data._meta
     const dataString = JSON.stringify(data, null, '  ')
     if (noCreateDirs === false) {
-      fs.mkdirSync(fsPath.dirname(processedPath), { recursive: true })
+      fs.mkdirSync(fsPath.dirname(processedPath), { recursive : true })
     }
     fs.writeFileSync(processedPath, dataString)
   }
@@ -350,14 +345,13 @@ const processMountSpec = ({ data, mntSpec, overrides, preserveOriginal, sourceFi
       dir = override.substring(4)
       file = undefined
     }
-    else
-      throw new Error(`Cannot parse override spec '${override}'. Override spec must start with 'file:' or 'dir:'.`)
+    else { throw new Error(`Cannot parse override spec '${override}'. Override spec must start with 'file:' or 'dir:'.`) }
   }
   else {
     file && dir // eslint-disable-line no-unused-expressions
-      && throw new Error(`Bad mount spec; cannot specify both data file (${file}) and directory (${dir})${ sourceFile ? `; source file: ${sourceFile}` : ''}`)
+      && throw new Error(`Bad mount spec; cannot specify both data file (${file}) and directory (${dir})${sourceFile ? `; source file: ${sourceFile}` : ''}`)
     !file && !dir // eslint-disable-line no-unused-expressions
-      && throw new Error(`Bad mount spec; neither data file nor directory${ sourceFile ? `; source file: ${sourceFile}` : ''}.`)
+      && throw new Error(`Bad mount spec; neither data file nor directory${sourceFile ? `; source file: ${sourceFile}` : ''}.`)
   }
 
   file && (file = envTemplateString(file))
