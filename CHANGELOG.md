@@ -33,3 +33,9 @@
 * _**hotfix**_: removed now unnecessary non-null check _(zane@liquid-labs.com; 2022-10-29T19:50:51.000Z)_
 * _**hotfix**_: add 'noMeta' option to writeFJSON _(zane@liquid-labs.com; 2022-12-15T17:54:05.000Z)_
 * _**hotfix**_: audit fixes _(zane@liquid-labs.com; 2022-12-15T17:54:36.000Z)_
+
+## Release 1.0.0-alpha.25
+* _**hotfix**_: fixed creation of dirs and added flag to supress _(zane@liquid-labs.com; 2022-12-21T18:59:36.000Z)_
+* _**hotfix**_: update catalyst-scripts _(zane@liquid-labs.com; 2022-12-26T17:50:00.000Z)_
+* _**hotfix**_: added support for file-relative component specs _(zane@liquid-labs.com; 2022-12-26T17:51:09.000Z)_
+* _**hotfix**_: lint fixes _(zane@liquid-labs.com; 2022-12-26T18:00:02.000Z)_
