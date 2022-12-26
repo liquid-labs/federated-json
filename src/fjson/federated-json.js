@@ -7,7 +7,7 @@
 import * as fs from 'node:fs'
 import * as fsPath from 'node:path'
 
-import { envTemplateString, testJsonPaths } from './utils'
+import { envTemplateString, processPath, testJsonPaths } from './utils'
 
 const FJSON_META_DATA_KEY = 'com.liquid-labs.federated-json'
 
@@ -40,10 +40,15 @@ const jsonRE = /\.json$/
 
 /**
 * Reads a JSON file and processes for federated mount points to construct a composite JSON object from one or more
-* files.
+* files. May take a single `file` optinally followed by an options object or a single options object containing a `file` option.
+* 
+* ### Options
+*
+* - `file`: (req) the path to the root file.
+* - `noMtime`: by default, the root files 'modified time' is calculated and stored as `myMeta`. The calculated mtime is greatest mtime of all the federated 
 */
 const readFJSON = (...args) => {
-  let file, noMtime, overrides, rememberSource, separateMeta, _metaData, _metaDatas, _metaPaths, _rootPath
+  let file, noMtime, overrides, rememberSource, separateMeta, _contextPath, _metaData, _metaDatas, _metaPaths, _rootPath
   if (!args || args.length === 0) throw new Error("Invalid 'no argument' call to readFJSON.")
   else if (args.length > 2) throw new Error("Invalid call to readFJSON; try expects (string, options) or (options).")
   else if (typeof args[0] === 'string') {
@@ -51,7 +56,7 @@ const readFJSON = (...args) => {
     if (args.length === 2 && args[1] && typeof args[1] !== 'object') {
       throw new Error("Unexpected second argument to readFJSON; expects options object.")
     }
-    ({ noMtime = false, overrides, rememberSource, separateMeta, _metaData, _metaDatas = [], _metaPaths, _rootPath } = args[1] || {});
+    ({ noMtime = false, overrides, rememberSource, separateMeta, _contextPath, _metaData, _metaDatas = [], _metaPaths, _rootPath } = args[1] || {});
     
   }
   else { // treat args[0] as object and see what happens!
@@ -59,12 +64,12 @@ const readFJSON = (...args) => {
       throw new Error("Invalid call to readFJSON; when passing options as first arg, it must be the only arg.")
     };
     
-    ({ file, noMtime = false, overrides, rememberSource, separateMeta, _metaData, _metaDatas = [], _metaPaths, _rootPath } = args[0]);
+    ({ file, noMtime = false, overrides, rememberSource, separateMeta, _contextPath, _metaData, _metaDatas = [], _metaPaths, _rootPath } = args[0]);
   }
   
   if (!file) { throw new Error(`File path invalid. (${file})`) }
 
-  const processedPath = envTemplateString(file)
+  const processedPath = processPath(file, _contextPath)
   if (!fs.existsSync(processedPath)) {
     const msg = `No such file: '${file}'` + (file !== processedPath ? ` ('${processedPath}')` : '')
     throw new Error(msg)
@@ -133,7 +138,7 @@ const readFJSON = (...args) => {
 
   for (const mntSpec of myMeta?.mountSpecs || []) {
     const { file: subFile, dir, path, mountPoint, finalKey } =
-      processMountSpec({ mntSpec, data, overrides, sourceFile: file })
+      processMountSpec({ data, mntSpec, overrides, sourceFile: file })
     
     if (subFile) {
       let subData = readFJSON({
@@ -142,6 +147,7 @@ const readFJSON = (...args) => {
         overrides,
         rememberSource,
         separateMeta,
+        _contextPath: processedPath,
         _metaData,
         _metaDatas,
         _metaPaths,
@@ -169,6 +175,7 @@ const readFJSON = (...args) => {
           overrides,
           rememberSource,
           separateMeta,
+          _contextPath: processedPath,
           _metaData,
           _metaDatas,
           _metaPaths,
@@ -225,7 +232,7 @@ const setSource = ({ data, file }) => {
 * Writes a standard or federated JSON file by analysing the objects meta data and breaking the saved files up
 * accourding to the configuration.
 */
-const writeFJSON = ({ noCreateDirs=false, data, file, noMeta=false, saveFrom, jsonPathToSelf }) => {
+const writeFJSON = ({ noCreateDirs=false, data, file, noMeta=false, saveFrom, jsonPathToSelf, _contextPath }) => {
   if (file === undefined) {
     file = getSourceFile(data)
     if (!file) { throw new Error('File was not provided (or invalid) nor did we find a "remembered source".') }
@@ -236,11 +243,13 @@ const writeFJSON = ({ noCreateDirs=false, data, file, noMeta=false, saveFrom, js
     throw new Error('No explicit file provided and no source found in object meta data.')
   }
 
+  const processedPath = processPath(file, _contextPath)
+
   const mountSpecs = getMountSpecs(data)
   if (mountSpecs) {
     for (const mntSpec of mountSpecs) {
       const { file: specFile, dir, path, mountPoint, finalKey, newData } =
-        processMountSpec({ mntSpec, data, preserveOriginal : true })
+        processMountSpec({ data, mntSpec, preserveOriginal : true })
       data = newData
 
       const subData = mountPoint[finalKey]
@@ -252,7 +261,8 @@ const writeFJSON = ({ noCreateDirs=false, data, file, noMeta=false, saveFrom, js
           file       : specFile,
           noMeta,
           saveFrom,
-          jsonPathToSelf : updatejsonPathToSelf(path, jsonPathToSelf)
+          jsonPathToSelf : updatejsonPathToSelf(path, jsonPathToSelf),
+          _contextPath: processedPath
         })
       }
       else {
@@ -262,7 +272,8 @@ const writeFJSON = ({ noCreateDirs=false, data, file, noMeta=false, saveFrom, js
             file       : fsPath.join(dir, `${subKey}.json`),
             noMeta,
             saveFrom,
-            jsonPathToSelf : updatejsonPathToSelf(`${path}.${subKey}`, jsonPathToSelf)
+            jsonPathToSelf : updatejsonPathToSelf(`${path}.${subKey}`, jsonPathToSelf),
+            _contextPath: processedPath
           })
         }
       }
@@ -272,7 +283,6 @@ const writeFJSON = ({ noCreateDirs=false, data, file, noMeta=false, saveFrom, js
   if (doSave) {
     if (noMeta === true) delete data._meta
     const dataString = JSON.stringify(data, null, '  ')
-    const processedPath = envTemplateString(file)
     if (noCreateDirs === false) {
       fs.mkdirSync(fsPath.dirname(processedPath), { recursive: true })
     }
@@ -327,8 +337,9 @@ const getMountSpecs = (data) => getMyMeta(data)?.mountSpecs
 /**
 * Internal function to process a mount spec into useful components utilized by the `readFJSON` and `writeFJSON`.
 */
-const processMountSpec = ({ mntSpec, data, overrides, preserveOriginal, sourceFile }) => {
+const processMountSpec = ({ data, mntSpec, overrides, preserveOriginal, sourceFile }) => {
   let { path, file, dir } = mntSpec
+
   if (overrides !== undefined && path in overrides) {
     const override = overrides[path]
     if (override.startsWith('file:')) {

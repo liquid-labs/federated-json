@@ -1,3 +1,5 @@
+import * as fsPath from 'node:path'
+
 /**
 * Package internal utility functions.
 */
@@ -27,6 +29,17 @@ const envTemplateString = (path) => {
   }
 
   return path
+}
+
+const processPath = (filePath, currPath) => {
+  if (currPath === undefined) currPath = process.cwd()
+  else if (currPath.match(/\.(?:json)/)) currPath = fsPath.dirname(currPath)
+
+  const newPath = envTemplateString(filePath)
+  // return fsPath.resolve(currPath, fsPath.dirname(newPath))
+  const resolvedPath = fsPath.resolve(currPath, newPath)
+
+  return resolvedPath
 }
 
 /**
@@ -60,4 +73,4 @@ const testJsonPaths = (pathA, pathB) => {
   return true
 }
 
-export { envTemplateString, testJsonPaths }
+export { envTemplateString, processPath, testJsonPaths }

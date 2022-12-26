@@ -30,6 +30,31 @@ const expectedRootObject = {
   'other-data' : 123
 }
 
+const expectedRootObjectRel = {
+  _meta : {
+    [FJSON_META_DATA_KEY] : {
+      mountSpecs : [ // eslint-disable-next-line no-template-curly-in-string
+        { path : '.foo.bar', file : './foo-bar.json' }
+      ]
+    }
+  },
+  foo : {
+    bar : {
+      _meta : {
+        [FJSON_META_DATA_KEY] : {
+          mountSpecs : [ // eslint-disable-next-line no-template-curly-in-string
+            { path : '.baz', file : '${TEST_DIR}/data/baz.json' }
+          ]
+        }
+      },
+      baz        : expectedBaz,
+      'some-key' : "I'm a string!"
+    },
+    boolean : true
+  },
+  'other-data' : 123
+}
+
 const linkyBarRef = { name : 'bar' }
 const linkyBazRef = { name : 'baz', value : true }
 const linkyBase = {
@@ -93,6 +118,7 @@ const readTable = [
   mkEntry('empty-object.json/trivial object', EMPTY_OBJ_SRC, {}),
   mkEntry('baz.json/simple string', testpath + '/baz.json', expectedBaz),
   mkEntry('root-object.json/federated object', testpath + '/root-object.json', expectedRootObject),
+  mkEntry('root-object-rel.json/federated object', testpath + '/root-object-rel.json', expectedRootObjectRel),
   mkEntry('link-arr2arr.json/intra-linked object', testpath + '/link-arr2arr.json', expectedArr2Arr),
   mkEntry('link-obj2arr.json/intra-linked object', testpath + '/link-obj2arr.json', expectedObj2Arr),
   mkEntry('link-str2arr.json/intra-linked object', testpath + '/link-str2arr.json', expectedStr2Arr),
@@ -138,12 +164,12 @@ const readFJSONTests = () => {
       const badFileBaseName = 'non-existent-file.json'
       const badFileName = `\${HOME}/${badFileBaseName}`
       const processedFileName = `${process.env.HOME}/${badFileBaseName}`
-      expect(() => { readFJSON(badFileName) }).toThrow(new RegExp(`\\${badFileName}.*\\('${processedFileName}'\\)`))
+      expect(() => { readFJSON(badFileName) }).toThrow(new RegExp(`'${processedFileName}'`))
     })
 
     test('throws useful error when JSON syntax is bad.', () => {
       const badSyntaxFile = `${testpath}/bad-syntax.json`
-      expect(() => { readFJSON(badSyntaxFile) }).toThrow(new RegExp(`unexpected token.*${badSyntaxFile}`, 'i'))
+      expect(() => { readFJSON(badSyntaxFile) }).toThrow(new RegExp(`${badSyntaxFile}`))
     })
 
     test('throws useful error when no data source specified in mnt spec', () => {
@@ -159,14 +185,14 @@ const readFJSONTests = () => {
     describe('overrides', () => {
       test("can replace a 'dir' with a 'file'", () =>
         expect(readFJSON(testpath + '/data-dir.json',
-          { overrides : { '.data' : `file:${testpath}/baz.json` } }).data)
+          { overrides : { '.data' : 'file:${TEST_DIR}/data/baz.json' } }).data)
           .toEqual('just a string'))
 
       test("can replace a 'file' with a 'dir'", () =>
         expect(readFJSON(testpath + '/foo-bar.json',
           {
             noMtime   : true,
-            overrides : { '.baz' : `dir:${testpath}/datadir` }
+            overrides : { '.baz' : 'dir:${TEST_DIR}/data/datadir' }
           }).baz)
           .toEqual(expectedDataDir))
 
