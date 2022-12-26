@@ -48,7 +48,7 @@ const jsonRE = /\.json$/
 * - `noMtime`: by default, the root files 'modified time' is calculated and stored as `myMeta`. The calculated mtime is greatest mtime of all the federated
 */
 const readFJSON = (...args) => {
-  let file, noMtime, overrides, rememberSource, separateMeta, _contextPath, _metaData, _metaDatas, _metaPaths, _rootPath
+  let file, noMtime, overrides, rememberSource, separateMeta, _contextFilePath, _metaData, _metaDatas, _metaPaths, _contextJSONPath
   if (!args || args.length === 0) throw new Error("Invalid 'no argument' call to readFJSON.")
   else if (args.length > 2) throw new Error('Invalid call to readFJSON; try expects (string, options) or (options).')
   else if (typeof args[0] === 'string') {
@@ -56,19 +56,19 @@ const readFJSON = (...args) => {
     if (args.length === 2 && args[1] && typeof args[1] !== 'object') {
       throw new Error('Unexpected second argument to readFJSON; expects options object.')
     }
-    ({ noMtime = false, overrides, rememberSource, separateMeta, _contextPath, _metaData, _metaDatas = [], _metaPaths, _rootPath } = args[1] || {})
+    ({ noMtime = false, overrides, rememberSource, separateMeta, _contextFilePath, _metaData, _metaDatas = [], _metaPaths, _contextJSONPath } = args[1] || {})
   }
   else { // treat args[0] as object and see what happens!
     if (args.length > 1) {
       throw new Error('Invalid call to readFJSON; when passing options as first arg, it must be the only arg.')
     }
 
-    ({ file, noMtime = false, overrides, rememberSource, separateMeta, _contextPath, _metaData, _metaDatas = [], _metaPaths, _rootPath } = args[0])
+    ({ file, noMtime = false, overrides, rememberSource, separateMeta, _contextFilePath, _metaData, _metaDatas = [], _metaPaths, _contextJSONPath } = args[0])
   }
 
   if (!file) { throw new Error(`File path invalid. (${file})`) }
 
-  const processedPath = processPath(file, _contextPath)
+  const processedPath = processPath(file, _contextFilePath)
   if (!fs.existsSync(processedPath)) {
     const msg = `No such file: '${file}'` + (file !== processedPath ? ` ('${processedPath}')` : '')
     throw new Error(msg)
@@ -109,7 +109,7 @@ const readFJSON = (...args) => {
   if (myMeta !== undefined) {
     _metaDatas.push(myMeta)
 
-    const myPath = _rootPath || '.'
+    const myPath = _contextJSONPath || '.'
     _metaPaths.push(myPath)
     // TODO: currently limited to mount paths traversing objects only
     let currMetaRef = _metaData
@@ -142,11 +142,11 @@ const readFJSON = (...args) => {
         overrides,
         rememberSource,
         separateMeta,
-        _contextPath : processedPath,
+        _contextFilePath : processedPath,
         _metaData,
         _metaDatas,
         _metaPaths,
-        _rootPath    : `${_rootPath || ''}${path}`
+        _contextJSONPath    : `${_contextJSONPath || ''}${path}`
       })
       if (separateMeta === true) {
         subData = subData[0]
@@ -170,11 +170,11 @@ const readFJSON = (...args) => {
           overrides,
           rememberSource,
           separateMeta,
-          _contextPath : processedPath,
+          _contextFilePath : processedPath,
           _metaData,
           _metaDatas,
           _metaPaths,
-          _rootPath    : `${_rootPath || ''}${path}`
+          _contextJSONPath    : `${_contextJSONPath || ''}${path}`
         })
         if (separateMeta === true) {
           subData = subData[0]
@@ -227,18 +227,22 @@ const setSource = ({ data, file }) => {
 * Writes a standard or federated JSON file by analysing the objects meta data and breaking the saved files up
 * accourding to the configuration.
 */
-const writeFJSON = ({ noCreateDirs = false, data, file, noMeta = false, saveFrom, jsonPathToSelf, _contextPath }) => {
+// const writeFJSON = ({ noCreateDirs = false, data, file, noMeta = false, saveFrom, _jsonPathToSelf, _contextFilePath, _contextJSONPath }) => {
+const writeFJSON = (options) => {
+  let { noCreateDirs = false, data, file, noMeta = false, saveFrom, _jsonPathToSelf, _contextFilePath, _contextJSONPath } = options
+  console.log(JSON.stringify(data))
+  
   if (file === undefined) {
     file = getSourceFile(data)
     if (!file) { throw new Error('File was not provided (or invalid) nor did we find a "remembered source".') }
   }
 
-  const doSave = saveFrom === undefined || (jsonPathToSelf && testJsonPaths(saveFrom, jsonPathToSelf))
+  const doSave = saveFrom === undefined || (_jsonPathToSelf && testJsonPaths(saveFrom, _jsonPathToSelf))
   if (doSave && !file) {
     throw new Error('No explicit file provided and no source found in object meta data.')
   }
 
-  const processedPath = processPath(file, _contextPath)
+  const processedPath = processPath(file, _contextFilePath)
 
   const mountSpecs = getMountSpecs(data)
   if (mountSpecs) {
@@ -251,13 +255,15 @@ const writeFJSON = ({ noCreateDirs = false, data, file, noMeta = false, saveFrom
       mountPoint[finalKey] = null
       // What's our save scheme? Single data file, or a scan dir?
       if (specFile) {
+        // TODO: can't we break the loop if we hit a defined saveFrom
         writeFJSON({
           data           : subData,
           file           : specFile,
           noMeta,
           saveFrom,
-          jsonPathToSelf : updatejsonPathToSelf(path, jsonPathToSelf),
-          _contextPath   : processedPath
+          _jsonPathToSelf : updateJsonPathToSelf(path, _jsonPathToSelf),
+          _contextFilePath   : processedPath,
+          _contextJSONPath    : `${_contextJSONPath || ''}${path}`
         })
       }
       else {
@@ -267,8 +273,9 @@ const writeFJSON = ({ noCreateDirs = false, data, file, noMeta = false, saveFrom
             file           : fsPath.join(dir, `${subKey}.json`),
             noMeta,
             saveFrom,
-            jsonPathToSelf : updatejsonPathToSelf(`${path}.${subKey}`, jsonPathToSelf),
-            _contextPath   : processedPath
+            _jsonPathToSelf : updateJsonPathToSelf(`${path}.${subKey}`, _jsonPathToSelf),
+            _contextFilePath   : processedPath,
+            _contextJSONPath    : `${_contextJSONPath || ''}${path}`
           })
         }
       }
@@ -313,7 +320,7 @@ const getSourceFile = (data) => {
 * Updates (by returning) the new dynamic path given the current data path (relative to a data mount or link point) and
 * previous dynamic path.
 */
-const updatejsonPathToSelf = (jsonMountPath, jsonPathToSelf) => {
+const updateJsonPathToSelf = (jsonMountPath, jsonPathToSelf) => {
   if (jsonMountPath !== undefined) {
     return jsonPathToSelf === undefined
       ? jsonMountPath
