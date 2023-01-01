@@ -229,8 +229,16 @@ const setSource = ({ data, file }) => {
 */
 // const writeFJSON = ({ noCreateDirs = false, data, file, noMeta = false, saveFrom, _jsonPathToSelf, _contextFilePath, _contextJSONPath }) => {
 const writeFJSON = (options) => {
-  let { noCreateDirs = false, data, file, noMeta = false, saveFrom, _jsonPathToSelf, _contextFilePath, _contextJSONPath } = options
-  console.log(JSON.stringify(data))
+  let { 
+    noCreateDirs = false, 
+    data, 
+    file, 
+    noMeta = false, 
+    saveFrom, 
+    _jsonPathToSelf, 
+    _contextFilePath, 
+    _contextJSONPath 
+  } = options
 
   if (file === undefined) {
     file = getSourceFile(data)
@@ -284,6 +292,12 @@ const writeFJSON = (options) => {
 
   if (doSave) {
     if (noMeta === true) delete data._meta
+    else if (data._meta) {
+      delete data._meta.sourceFile
+      delete data._meta.myMtimeMs
+      delete data._meta.mtimeMs
+    }
+
     const dataString = JSON.stringify(data, null, '  ')
     if (noCreateDirs === false) {
       fs.mkdirSync(fsPath.dirname(processedPath), { recursive : true })
