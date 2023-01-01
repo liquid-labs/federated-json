@@ -66,3 +66,8 @@
 ## Release 1.0.0-alpha.29
 * _**hotfix**_: fixed missing file dependencies in build _(zane@liquid-labs.com; 2023-01-01T19:31:19.000Z)_
 * _**hotfix**_: updated CHANGELOGE.md for release (by liq) _(zane@liquid-labs.com; 2023-01-01T19:31:45.000Z)_
+
+## Release 1.0.0-alpha.30
+* _**hotfix**_: remove empty meta on save _(zane@liquid-labs.com; 2023-01-01T20:52:05.000Z)_
+* _**hotfix**_: lint fix _(zane@liquid-labs.com; 2023-01-01T20:52:29.000Z)_
+* _**hotfix**_: updated CHANGELOGE.md for release (by liq) _(zane@liquid-labs.com; 2023-01-01T20:53:09.000Z)_
