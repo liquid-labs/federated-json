@@ -31,7 +31,7 @@ all: build
 
 # build rules
 # TODO: should be a 'grouped taget' '&:' sep, but currently writing to make 3 and thaht's a 4.x feature.
-$(FJSON_CJS_LIB) $(FJSON_MODULE_LIB) : $(FJSON_SRC) 
+$(FJSON_CJS_LIB) $(FJSON_MODULE_LIB) : $(FJSON_FILES) 
 	JS_SRC=$(FJSON_SRC) $(CATALYST_SCRIPTS) build
 
 $(CLI_BIN): $(CLI_SRC_ROOT) $(CLI_SRC_FILES)
