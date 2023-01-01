@@ -181,7 +181,7 @@ const writeFJSONTests = () => {
           data.data.baz['more stuff'] = 'More stuff'
           data.data.bar.push(4)
 
-          writeFJSON({ data, saveFrom : '.data' })
+          writeFJSON({ data, leaveInternalMeta: true, saveFrom : '.data' })
 
           postRootStat = fs.statSync(ddFile, { bigint : true })
           loadStats(postStats)
@@ -203,7 +203,7 @@ const writeFJSONTests = () => {
           ['bar', undefined], // an array
           ['baz', `${testStagingpath}/datadir/baz.json`], // an object literal
           ['foo', undefined] // a string
-        ])("in memory meta-source for '%s' is '%s'", (key, source) => {
+        ])("'leaveInternalMeta' retains in memory meta-source for '%s' and source file is '%s'", (key, source) => {
           const leafInMemory = data.data[key]
           expect(leafInMemory?._meta?.[FJSON_META_DATA_KEY]?.sourceFile).toBe(source)
         })

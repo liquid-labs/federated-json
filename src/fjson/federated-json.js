@@ -233,6 +233,7 @@ const writeFJSON = (options) => {
     noCreateDirs = false,
     data,
     file,
+    leaveInternalMeta = false,
     noMeta = false,
     saveFrom,
     _jsonPathToSelf,
@@ -266,6 +267,7 @@ const writeFJSON = (options) => {
         writeFJSON({
           data             : subData,
           file             : specFile,
+          leaveInternalMeta,
           noMeta,
           saveFrom,
           _jsonPathToSelf  : updateJsonPathToSelf(path, _jsonPathToSelf),
@@ -278,6 +280,7 @@ const writeFJSON = (options) => {
           writeFJSON({
             data             : subData[subKey],
             file             : fsPath.join(dir, `${subKey}.json`),
+            leaveInternalMeta,
             noMeta,
             saveFrom,
             _jsonPathToSelf  : updateJsonPathToSelf(`${path}.${subKey}`, _jsonPathToSelf),
@@ -291,10 +294,13 @@ const writeFJSON = (options) => {
 
   if (doSave) {
     if (noMeta === true) delete data._meta
-    else if (data._meta) {
-      delete data._meta.sourceFile
-      delete data._meta.myMtimeMs
-      delete data._meta.mtimeMs
+    else if (leaveInternalMeta === false) {
+      const metaData = data?._meta?.['com.liquid-labs.federated-json']
+      if (metaData) {
+        delete metaData.sourceFile
+        delete metaData.myMtimeMs
+        delete metaData.mtimeMs
+      }
     }
 
     const dataString = JSON.stringify(data, null, '  ')
