@@ -45,3 +45,4 @@
 * _**hotfix**_: tested relative single mount write _(zane@liquid-labs.com; 2022-12-26T19:16:23.000Z)_
 * _**hotfix**_: add newline at the end of the save file _(zane@liquid-labs.com; 2023-01-01T01:35:32.000Z)_
 * _**hotfix**_: lint fixes _(zane@liquid-labs.com; 2023-01-01T01:35:52.000Z)_
+* _**hotfix**_: updated CHANGELOGE.md for release (by liq) _(zane@liquid-labs.com; 2023-01-01T01:36:02.000Z)_
