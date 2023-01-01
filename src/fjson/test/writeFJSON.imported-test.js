@@ -181,7 +181,7 @@ const writeFJSONTests = () => {
           data.data.baz['more stuff'] = 'More stuff'
           data.data.bar.push(4)
 
-          writeFJSON({ data, leaveInternalMeta: true, saveFrom : '.data' })
+          writeFJSON({ data, leaveInternalMeta : true, saveFrom : '.data' })
 
           postRootStat = fs.statSync(ddFile, { bigint : true })
           loadStats(postStats)
