@@ -46,3 +46,10 @@
 * _**hotfix**_: add newline at the end of the save file _(zane@liquid-labs.com; 2023-01-01T01:35:32.000Z)_
 * _**hotfix**_: lint fixes _(zane@liquid-labs.com; 2023-01-01T01:35:52.000Z)_
 * _**hotfix**_: updated CHANGELOGE.md for release (by liq) _(zane@liquid-labs.com; 2023-01-01T01:36:02.000Z)_
+
+## Release 1.0.0-alpha.27
+* _**hotfix**_: test addition onf newline _(zane@liquid-labs.com; 2023-01-01T16:22:10.000Z)_
+* _**hotfix**_: delete internal data tracking before save _(zane@liquid-labs.com; 2023-01-01T16:28:35.000Z)_
+* _**hotfix**_: removed redundant logic and tested 'no save file discernable' error condition _(zane@liquid-labs.com; 2023-01-01T16:37:22.000Z)_
+* _**hotfix**_: lint fixes _(zane@liquid-labs.com; 2023-01-01T16:37:58.000Z)_
+* _**hotfix**_: updated CHANGELOGE.md for release (by liq) _(zane@liquid-labs.com; 2023-01-01T16:39:34.000Z)_
