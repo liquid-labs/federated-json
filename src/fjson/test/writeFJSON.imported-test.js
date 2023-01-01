@@ -38,7 +38,7 @@ const writeFJSONTests = () => {
         let rootFileContents
         beforeAll(() => {
           writeFJSON({ data : testData, file : rootTestFile })
-          rootFileContents = fs.readFileSync(rootTestFile, { encoding: 'utf8' })
+          rootFileContents = fs.readFileSync(rootTestFile, { encoding : 'utf8' })
         })
 
         test('writes truncated root file', () => {

@@ -229,15 +229,15 @@ const setSource = ({ data, file }) => {
 */
 // const writeFJSON = ({ noCreateDirs = false, data, file, noMeta = false, saveFrom, _jsonPathToSelf, _contextFilePath, _contextJSONPath }) => {
 const writeFJSON = (options) => {
-  let { 
-    noCreateDirs = false, 
-    data, 
-    file, 
-    noMeta = false, 
-    saveFrom, 
-    _jsonPathToSelf, 
-    _contextFilePath, 
-    _contextJSONPath 
+  let {
+    noCreateDirs = false,
+    data,
+    file,
+    noMeta = false,
+    saveFrom,
+    _jsonPathToSelf,
+    _contextFilePath,
+    _contextJSONPath
   } = options
 
   if (file === undefined) {
