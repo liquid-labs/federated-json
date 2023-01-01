@@ -21,6 +21,10 @@ const writeFJSONTests = () => {
       expect(JSON.parse(contents)).toEqual(testData)
     })
 
+    test('raises exception when no file discernable', () => {
+      expect(() => writeFJSON({ data : {} })).toThrow(/No explicit file/)
+    })
+
     describe('write single file mount', () => {
       const testEmbed = { bar : "I'm an embed!" }
 

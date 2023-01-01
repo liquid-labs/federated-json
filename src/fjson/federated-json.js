@@ -242,7 +242,6 @@ const writeFJSON = (options) => {
 
   if (file === undefined) {
     file = getSourceFile(data)
-    if (!file) { throw new Error('File was not provided (or invalid) nor did we find a "remembered source".') }
   }
 
   const doSave = saveFrom === undefined || (_jsonPathToSelf && testJsonPaths(saveFrom, _jsonPathToSelf))
