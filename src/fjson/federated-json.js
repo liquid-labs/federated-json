@@ -288,7 +288,7 @@ const writeFJSON = (options) => {
     if (noCreateDirs === false) {
       fs.mkdirSync(fsPath.dirname(processedPath), { recursive : true })
     }
-    fs.writeFileSync(processedPath, dataString)
+    fs.writeFileSync(processedPath, dataString + '\n')
   }
 }
 
