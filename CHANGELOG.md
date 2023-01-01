@@ -53,3 +53,12 @@
 * _**hotfix**_: removed redundant logic and tested 'no save file discernable' error condition _(zane@liquid-labs.com; 2023-01-01T16:37:22.000Z)_
 * _**hotfix**_: lint fixes _(zane@liquid-labs.com; 2023-01-01T16:37:58.000Z)_
 * _**hotfix**_: updated CHANGELOGE.md for release (by liq) _(zane@liquid-labs.com; 2023-01-01T16:39:34.000Z)_
+
+## Release 1.0.0-alpha.28
+* _**hotfix**_: fixed race conditions between tests _(zane@liquid-labs.com; 2023-01-01T18:51:01.000Z)_
+* _**hotfix**_: audit fixes _(zane@liquid-labs.com; 2023-01-01T18:53:54.000Z)_
+* _**hotfix**_: lint fix _(zane@liquid-labs.com; 2023-01-01T19:00:55.000Z)_
+* _**hotfix**_: updated build, test, and qa to use makefile _(zane@liquid-labs.com; 2023-01-01T19:01:40.000Z)_
+* _**hotfix**_: fixed deletion of internal meta before save and added option to supress behavior _(zane@liquid-labs.com; 2023-01-01T19:15:12.000Z)_
+* _**hotfix**_: lint fix _(zane@liquid-labs.com; 2023-01-01T19:15:32.000Z)_
+* _**hotfix**_: ddFile var can be constant _(zane@liquid-labs.com; 2023-01-01T19:19:00.000Z)_
