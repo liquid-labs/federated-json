@@ -294,12 +294,23 @@ const writeFJSON = (options) => {
 
   if (doSave) {
     if (noMeta === true) delete data._meta
-    else if (leaveInternalMeta === false) {
+    else {
       const metaData = data?._meta?.['com.liquid-labs.federated-json']
       if (metaData) {
-        delete metaData.sourceFile
-        delete metaData.myMtimeMs
-        delete metaData.mtimeMs
+        // by default, we delete the internal metaData added during the load process
+        if (leaveInternalMeta === false) { 
+          delete metaData.sourceFile
+          delete metaData.myMtimeMs
+          delete metaData.mtimeMs
+        }
+
+        // remove empty meta-data entries
+        if (Object.keys(metaData).length === 0) {
+          delete data._meta['com.liquid-labs.federated-json']
+          if (Object.keys(data._meta).length === 0) {
+            delete data._meta
+          }
+        }
       }
     }
 
