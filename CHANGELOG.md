@@ -62,3 +62,7 @@
 * _**hotfix**_: fixed deletion of internal meta before save and added option to supress behavior _(zane@liquid-labs.com; 2023-01-01T19:15:12.000Z)_
 * _**hotfix**_: lint fix _(zane@liquid-labs.com; 2023-01-01T19:15:32.000Z)_
 * _**hotfix**_: ddFile var can be constant _(zane@liquid-labs.com; 2023-01-01T19:19:00.000Z)_
+
+## Release 1.0.0-alpha.29
+* _**hotfix**_: fixed missing file dependencies in build _(zane@liquid-labs.com; 2023-01-01T19:31:19.000Z)_
+* _**hotfix**_: updated CHANGELOGE.md for release (by liq) _(zane@liquid-labs.com; 2023-01-01T19:31:45.000Z)_
