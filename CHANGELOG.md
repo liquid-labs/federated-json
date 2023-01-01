@@ -39,3 +39,9 @@
 * _**hotfix**_: update catalyst-scripts _(zane@liquid-labs.com; 2022-12-26T17:50:00.000Z)_
 * _**hotfix**_: added support for file-relative component specs _(zane@liquid-labs.com; 2022-12-26T17:51:09.000Z)_
 * _**hotfix**_: lint fixes _(zane@liquid-labs.com; 2022-12-26T18:00:02.000Z)_
+
+## Release 1.0.0-alpha.26
+* _**hotfix**_: made var names for explicit for clarity _(zane@liquid-labs.com; 2022-12-26T19:16:11.000Z)_
+* _**hotfix**_: tested relative single mount write _(zane@liquid-labs.com; 2022-12-26T19:16:23.000Z)_
+* _**hotfix**_: add newline at the end of the save file _(zane@liquid-labs.com; 2023-01-01T01:35:32.000Z)_
+* _**hotfix**_: lint fixes _(zane@liquid-labs.com; 2023-01-01T01:35:52.000Z)_
