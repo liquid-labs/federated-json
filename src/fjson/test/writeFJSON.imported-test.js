@@ -161,7 +161,8 @@ const writeFJSONTests = () => {
       })
 
       describe('to mounted directories', () => {
-        let ddFile, data, preRootStat, postRootStat
+        const ddFile = `${testpath}/data-dir.json`
+        let data, preRootStat, postRootStat
         const postStats = {}
         const preStats = {}
         const loadStats = (target) => {
@@ -171,7 +172,6 @@ const writeFJSONTests = () => {
         }
         beforeAll(() => {
           // TODO: In theory, it would be better to start form 'expectedRootObject', but we should turn that into a function to isolate instances from cross-pollution
-          ddFile = `${testpath}/data-dir.json`
           // need to set 'rememberSource' so the sub-data will get read with source attached.
           data = readFJSON(ddFile, { rememberSource : true })
           preRootStat = fs.statSync(ddFile, { bigint : true })
