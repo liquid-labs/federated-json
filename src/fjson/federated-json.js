@@ -137,7 +137,7 @@ const readFJSON = (...args) => {
 
     if (subFile) {
       let subData = readFJSON({
-        file         : subFile,
+        file             : subFile,
         noMtime,
         overrides,
         rememberSource,
@@ -146,7 +146,7 @@ const readFJSON = (...args) => {
         _metaData,
         _metaDatas,
         _metaPaths,
-        _contextJSONPath    : `${_contextJSONPath || ''}${path}`
+        _contextJSONPath : `${_contextJSONPath || ''}${path}`
       })
       if (separateMeta === true) {
         subData = subData[0]
@@ -165,7 +165,7 @@ const readFJSON = (...args) => {
       for (const dirFile of files) {
         const mntPnt = dirFile.replace(jsonRE, '')
         let subData = readFJSON({
-          file         : fsPath.join(dir, dirFile),
+          file             : fsPath.join(dir, dirFile),
           noMtime,
           overrides,
           rememberSource,
@@ -174,7 +174,7 @@ const readFJSON = (...args) => {
           _metaData,
           _metaDatas,
           _metaPaths,
-          _contextJSONPath    : `${_contextJSONPath || ''}${path}`
+          _contextJSONPath : `${_contextJSONPath || ''}${path}`
         })
         if (separateMeta === true) {
           subData = subData[0]
@@ -231,7 +231,7 @@ const setSource = ({ data, file }) => {
 const writeFJSON = (options) => {
   let { noCreateDirs = false, data, file, noMeta = false, saveFrom, _jsonPathToSelf, _contextFilePath, _contextJSONPath } = options
   console.log(JSON.stringify(data))
-  
+
   if (file === undefined) {
     file = getSourceFile(data)
     if (!file) { throw new Error('File was not provided (or invalid) nor did we find a "remembered source".') }
@@ -257,25 +257,25 @@ const writeFJSON = (options) => {
       if (specFile) {
         // TODO: can't we break the loop if we hit a defined saveFrom
         writeFJSON({
-          data           : subData,
-          file           : specFile,
+          data             : subData,
+          file             : specFile,
           noMeta,
           saveFrom,
-          _jsonPathToSelf : updateJsonPathToSelf(path, _jsonPathToSelf),
-          _contextFilePath   : processedPath,
-          _contextJSONPath    : `${_contextJSONPath || ''}${path}`
+          _jsonPathToSelf  : updateJsonPathToSelf(path, _jsonPathToSelf),
+          _contextFilePath : processedPath,
+          _contextJSONPath : `${_contextJSONPath || ''}${path}`
         })
       }
       else {
         for (const subKey of Object.keys(subData)) {
           writeFJSON({
-            data           : subData[subKey],
-            file           : fsPath.join(dir, `${subKey}.json`),
+            data             : subData[subKey],
+            file             : fsPath.join(dir, `${subKey}.json`),
             noMeta,
             saveFrom,
-            _jsonPathToSelf : updateJsonPathToSelf(`${path}.${subKey}`, _jsonPathToSelf),
-            _contextFilePath   : processedPath,
-            _contextJSONPath    : `${_contextJSONPath || ''}${path}`
+            _jsonPathToSelf  : updateJsonPathToSelf(`${path}.${subKey}`, _jsonPathToSelf),
+            _contextFilePath : processedPath,
+            _contextJSONPath : `${_contextJSONPath || ''}${path}`
           })
         }
       }

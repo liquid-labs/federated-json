@@ -55,7 +55,7 @@ const writeFJSONTests = () => {
 
       describe('relative mount spec', () => {
         const rootTestFile = `${testDir}/single-mount-file-rel.json`
-        const barTestFile = `./bar-rel.json`
+        const barTestFile = './bar-rel.json'
         const testData = {
           _meta : { [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', file : barTestFile }] } },
           foo   : testEmbed
