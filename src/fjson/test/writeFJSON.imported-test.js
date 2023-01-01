@@ -133,10 +133,10 @@ const writeFJSONTests = () => {
 
       test('to mounted files', () => {
         // TODO: In theory, it would be better to start form 'expectedRootObject', but we should turn that into a function to isolate instances from cross-pollution
-        const file = `${testpath}/root-object.json`
-        const data = readFJSON(file, { rememberSource : true })
+        const roFile = `${testpath}/root-object.json`
+        const data = readFJSON(roFile, { rememberSource : true })
 
-        const preRootStat = fs.statSync(file, { bigint : true })
+        const preRootStat = fs.statSync(roFile, { bigint : true })
         const preFooStat = fs.statSync(`${testStagingpath}/foo-bar.json`, { bigint : true })
         const preBazStat = fs.statSync(`${testStagingpath}/baz.json`, { bigint : true })
 
@@ -144,7 +144,7 @@ const writeFJSONTests = () => {
         data.foo.bar.baz = ['I am no longer', 'just a string']
         writeFJSON({ data, saveFrom : '.foo' })
 
-        const postRootStat = fs.statSync(file, { bigint : true })
+        const postRootStat = fs.statSync(roFile, { bigint : true })
         const postFooStat = fs.statSync(`${testStagingpath}/foo-bar.json`, { bigint : true })
         const postBazStat = fs.statSync(`${testStagingpath}/baz.json`, { bigint : true })
 
@@ -161,7 +161,7 @@ const writeFJSONTests = () => {
       })
 
       describe('to mounted directories', () => {
-        let file, data, preRootStat, postRootStat
+        let ddFile, data, preRootStat, postRootStat
         const postStats = {}
         const preStats = {}
         const loadStats = (target) => {
@@ -171,10 +171,10 @@ const writeFJSONTests = () => {
         }
         beforeAll(() => {
           // TODO: In theory, it would be better to start form 'expectedRootObject', but we should turn that into a function to isolate instances from cross-pollution
-          file = `${testpath}/data-dir.json`
+          ddFile = `${testpath}/data-dir.json`
           // need to set 'rememberSource' so the sub-data will get read with source attached.
-          data = readFJSON(file, { rememberSource : true })
-          preRootStat = fs.statSync(file, { bigint : true })
+          data = readFJSON(ddFile, { rememberSource : true })
+          preRootStat = fs.statSync(ddFile, { bigint : true })
 
           loadStats(preStats)
           data.data.foo = 'new foo'
@@ -183,7 +183,7 @@ const writeFJSONTests = () => {
 
           writeFJSON({ data, saveFrom : '.data' })
 
-          postRootStat = fs.statSync(file, { bigint : true })
+          postRootStat = fs.statSync(ddFile, { bigint : true })
           loadStats(postStats)
         })
 
@@ -225,13 +225,13 @@ const writeFJSONTests = () => {
           let preRootStat, postRootStat // leave file and data alone
           const postStats = {}
           const preStats = {}
-          beforeAll(() => {
-            preRootStat = fs.statSync(file, { bigint : true })
+          beforeEach(() => {
+            preRootStat = fs.statSync(ddFile, { bigint : true })
             loadStats(preStats)
             data.data.baz['more stuff'] = 'Lots of stuff here'
             writeFJSON({ data, saveFrom : '.data.baz' })
 
-            postRootStat = fs.statSync(file, { bigint : true })
+            postRootStat = fs.statSync(ddFile, { bigint : true })
             loadStats(postStats)
           })
 
