@@ -31,16 +31,17 @@ const writeFJSONTests = () => {
           _meta : { [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', file : barTestFile }] } },
           foo   : testEmbed
         }
+        let rootFileContents
         beforeAll(() => {
           writeFJSON({ data : testData, file : rootTestFile })
+          rootFileContents = fs.readFileSync(rootTestFile, { encoding: 'utf8' })
         })
 
         test('writes truncated root file', () => {
           // the written object should have a 'null' foo
           const exemplar = Object.assign({}, testData)
           exemplar.foo = null
-          const rootContents = fs.readFileSync(rootTestFile)
-          expect(JSON.parse(rootContents)).toEqual(exemplar)
+          expect(JSON.parse(rootFileContents)).toEqual(exemplar)
         })
 
         test('writes leaf file', () => {
@@ -50,6 +51,10 @@ const writeFJSONTests = () => {
 
         test('leaves source JSON intact', () => {
           expect(testData.foo).toEqual(testEmbed)
+        })
+
+        test('file ends with blank newline', () => {
+          expect(rootFileContents.endsWith('\n'))
         })
       })
 
