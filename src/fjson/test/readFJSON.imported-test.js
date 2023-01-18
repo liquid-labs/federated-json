@@ -1,5 +1,7 @@
 /* global describe expect test */
 
+import structuredClone from 'core-js-pure/actual/structured-clone'
+
 import { lastModificationMs, readFJSON, FJSON_META_DATA_KEY } from '../federated-json'
 import { EMPTY_OBJ_SRC, testpath } from './shared-test-data'
 
@@ -29,6 +31,9 @@ const expectedRootObject = {
   },
   'other-data' : 123
 }
+
+const expectedRootObjectYamlSub = structuredClone(expectedRootObject)
+expectedRootObjectYamlSub._meta[FJSON_META_DATA_KEY].mountSpecs[0].file = '${TEST_DIR}/data/foo-bar.yaml'
 
 const expectedRootObjectRel = {
   _meta : {
@@ -118,6 +123,8 @@ const readTable = [
   mkEntry('empty-object.json/trivial object', EMPTY_OBJ_SRC, {}),
   mkEntry('baz.json/simple string', testpath + '/baz.json', expectedBaz),
   mkEntry('root-object.json/federated object', testpath + '/root-object.json', expectedRootObject),
+  mkEntry('root-object.yaml/federated object', testpath + '/root-object.yaml', expectedRootObject),
+  mkEntry('root-object-yaml-sub.json/federated object', testpath + '/root-object-yaml-sub.json', expectedRootObjectYamlSub),
   mkEntry('root-object-rel.json/federated object', testpath + '/root-object-rel.json', expectedRootObjectRel),
   mkEntry('link-arr2arr.json/intra-linked object', testpath + '/link-arr2arr.json', expectedArr2Arr),
   mkEntry('link-obj2arr.json/intra-linked object', testpath + '/link-obj2arr.json', expectedObj2Arr),
@@ -135,16 +142,15 @@ const readFJSONTests = () => {
 
     test.each(readTable)('loads $description with separate meta', ({ file, expected }) => {
       const [data, meta] = readFJSON({ file, noMtime : true, separateMeta : true })
-      const noMetaExpected = typeof expected === 'object'
-        ? Object.assign({}, expected)
-        : expected
+      const noMetaExpected = structuredClone(expected)
       const rootMeta = noMetaExpected._meta
       delete noMetaExpected._meta
       // this is a little hacky, but good enough for now...
       if (noMetaExpected?.foo?.bar) {
         const barMeta = noMetaExpected.foo.bar._meta
-        delete noMetaExpected.foo.bar._meta
         expect(barMeta).toEqual(meta.foo.bar._meta)
+        noMetaExpected.foo.bar = Object.assign({}, noMetaExpected.foo.bar)
+        delete noMetaExpected.foo.bar._meta
       }
       expect(data).toEqual(noMetaExpected)
       expect(rootMeta).toEqual(meta._meta)

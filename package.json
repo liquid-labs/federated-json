@@ -43,6 +43,8 @@
   "devDependencies": {
     "@liquid-labs/bash-rollup": "^1.0.0-alpha.6",
     "@liquid-labs/bash-toolkit": "^1.0.0-alpha.57",
-    "@liquid-labs/catalyst-scripts": "^1.0.0-alpha.57"
+    "@liquid-labs/catalyst-scripts": "^1.0.0-alpha.57",
+    "core-js-pure": "^3.27.1",
+    "js-yaml": "^4.1.0"
   }
 }

@@ -7,6 +7,8 @@
 import * as fs from 'node:fs'
 import * as fsPath from 'node:path'
 
+import yaml from 'js-yaml'
+
 import { envTemplateString, processPath, testJsonPaths } from './utils'
 
 const FJSON_META_DATA_KEY = 'com.liquid-labs.federated-json'
@@ -77,7 +79,7 @@ const readFJSON = (...args) => {
   const dataBits = fs.readFileSync(processedPath)
   let data // actually, would love 'const', but need to set inside try block and don'w want to expand scope of the try.
   try {
-    data = JSON.parse(dataBits)
+    data = file.endsWith('.json') ? JSON.parse(dataBits) : yaml.load(dataBits)
   }
   catch (e) {
     if (e instanceof SyntaxError) {
@@ -314,7 +316,7 @@ const writeFJSON = (options) => {
       }
     }
 
-    const dataString = JSON.stringify(data, null, '  ')
+    const dataString = processedPath.endsWith('.json') ? JSON.stringify(data, null, '  ') : yaml.dump(data)
     if (noCreateDirs === false) {
       fs.mkdirSync(fsPath.dirname(processedPath), { recursive : true })
     }

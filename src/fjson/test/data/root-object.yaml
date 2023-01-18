@@ -1,0 +1,9 @@
+_meta:
+  com.liquid-labs.federated-json:
+    mountSpecs:
+      - path: .foo.bar
+        file: ${TEST_DIR}/data/foo-bar.json
+foo:
+  bar: null
+  boolean: true
+other-data: 123

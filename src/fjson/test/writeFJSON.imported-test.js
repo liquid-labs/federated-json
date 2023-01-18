@@ -2,6 +2,8 @@
 import * as fs from 'node:fs'
 import * as fsPath from 'node:path'
 
+import yaml from 'js-yaml'
+
 import { readFJSON, writeFJSON, FJSON_META_DATA_KEY, setSource } from '../federated-json'
 // testDir is a /tmp path and writable as is
 import { testDir, testpath } from './shared-test-data'
@@ -28,39 +30,47 @@ const writeFJSONTests = () => {
     describe('write single file mount', () => {
       const testEmbed = { bar : "I'm an embed!" }
 
-      describe('absolute mount spec', () => {
-        const rootTestFile = `${testDir}/single-mount-file-abs.json`
-        const barTestFile = `${testDir}/bar-abs.json`
-        const testData = {
-          _meta : { [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', file : barTestFile }] } },
-          foo   : testEmbed
-        }
-        let rootFileContents
-        beforeAll(() => {
-          writeFJSON({ data : testData, file : rootTestFile })
-          rootFileContents = fs.readFileSync(rootTestFile, { encoding : 'utf8' })
-        })
+      const absoluteMountFileMatrix = [
+        [ `${testDir}/single-mount-file-abs.json`, `${testDir}/bar-abs.json` ],
+        [ `${testDir}/single-mount-file-abs.yaml`, `${testDir}/bar-abs.json` ],
+        [ `${testDir}/single-mount-file-abs.json`, `${testDir}/bar-abs.yaml` ],
+        [ `${testDir}/single-mount-file-abs.yaml`, `${testDir}/bar-abs.yaml` ]
+      ]
+      for (const [ rootTestFile, barTestFile ] of absoluteMountFileMatrix) {
+        describe('absolute mount spec', () => {
+          const rootTestFile = `${testDir}/single-mount-file-abs.json`
+          const barTestFile = `${testDir}/bar-abs.json`
+          const testData = {
+            _meta : { [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', file : barTestFile }] } },
+            foo   : testEmbed
+          }
+          let rootFileContents
+          beforeAll(() => {
+            writeFJSON({ data : testData, file : rootTestFile })
+            rootFileContents = fs.readFileSync(rootTestFile, { encoding : 'utf8' })
+          })
 
-        test('writes truncated root file', () => {
-          // the written object should have a 'null' foo
-          const exemplar = Object.assign({}, testData)
-          exemplar.foo = null
-          expect(JSON.parse(rootFileContents)).toEqual(exemplar)
-        })
+          test('writes truncated root file', () => {
+            // the written object should have a 'null' foo
+            const exemplar = Object.assign({}, testData)
+            exemplar.foo = null
+            expect(JSON.parse(rootFileContents)).toEqual(exemplar)
+          })
 
-        test('writes leaf file', () => {
-          const barContents = fs.readFileSync(barTestFile)
-          expect(JSON.parse(barContents)).toEqual(testEmbed)
-        })
+          test('writes leaf file', () => {
+            const barContents = fs.readFileSync(barTestFile)
+            expect(JSON.parse(barContents)).toEqual(testEmbed)
+          })
 
-        test('leaves source JSON intact', () => {
-          expect(testData.foo).toEqual(testEmbed)
-        })
+          test('leaves source JSON intact', () => {
+            expect(testData.foo).toEqual(testEmbed)
+          })
 
-        test('file ends with blank newline', () => {
-          expect(rootFileContents.endsWith('\n'))
+          test('file ends with blank newline', () => {
+            expect(rootFileContents.endsWith('\n'))
+          })
         })
-      })
+      }
 
       describe('relative mount spec', () => {
         const rootTestFile = `${testDir}/single-mount-file-rel.json`
@@ -92,41 +102,43 @@ const writeFJSONTests = () => {
       })
     })
 
-    describe('write single dir mount', () => {
-      const rootTestFile = `${testDir}/single-mount-dir.json`
-      const barTestDir = `${testDir}/bar`
-      const barValue = "I'm an embed!"
-      const bazValue = [1, 2, 'Hi!']
-      const testEmbed = { bar : barValue, baz : bazValue }
-      const testData = {
-        _meta : { [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', dir : barTestDir }] } },
-        foo   : testEmbed
-      }
-      beforeAll(() => {
-        writeFJSON({ data : testData, file : rootTestFile })
-      })
+    for (const rootTestFile of [ `${testDir}/single-mount-dir.json`, `${testDir}/single-mount-dir.yaml` ]) {
+      describe('write single dir mount', () => {
+        const barTestDir = `${testDir}/bar`
+        const barValue = "I'm an embed!"
+        const bazValue = [1, 2, 'Hi!']
+        const testEmbed = { bar : barValue, baz : bazValue }
+        const testData = {
+          _meta : { [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', dir : barTestDir }] } },
+          foo   : testEmbed
+        }
+        beforeAll(() => {
+          writeFJSON({ data : testData, file : rootTestFile })
+        })
 
-      test('writes truncated root file', () => {
-        // the written object will have a 'null' foo
-        // the written object should have a 'null' foo
-        const exemplar = Object.assign({}, testData)
-        exemplar.foo = null
-        const rootContents = fs.readFileSync(rootTestFile)
-        expect(JSON.parse(rootContents)).toEqual(exemplar)
-      })
+        test('writes truncated root file', () => {
+          // the written object will have a 'null' foo
+          // the written object should have a 'null' foo
+          const exemplar = Object.assign({}, testData)
+          exemplar.foo = null
+          const rootContents = fs.readFileSync(rootTestFile)
+          const expectedData = rootTestFile.endsWith('.json') ? JSON.parse(rootContents) : yaml.load(rootContents)
+          expect(expectedData).toEqual(exemplar)
+        })
 
-      test('writes leaf files', () => {
-        const barContents = fs.readFileSync(`${barTestDir}/bar.json`)
-        expect(JSON.parse(barContents)).toEqual(barValue)
+        test('writes leaf files', () => {
+          const barContents = fs.readFileSync(`${barTestDir}/bar.json`)
+          expect(JSON.parse(barContents)).toEqual(barValue)
 
-        const bazContents = fs.readFileSync(`${barTestDir}/baz.json`)
-        expect(JSON.parse(bazContents)).toEqual(bazValue)
-      })
+          const bazContents = fs.readFileSync(`${barTestDir}/baz.json`)
+          expect(JSON.parse(bazContents)).toEqual(bazValue)
+        })
 
-      test('leaves source JSON intact', () => {
-        expect(testData.foo).toEqual(testEmbed)
+        test('leaves source JSON intact', () => {
+          expect(testData.foo).toEqual(testEmbed)
+        })
       })
-    })
+    }
 
     describe('supports partial branch writes', () => {
       const testStagingpath = fsPath.join(__dirname, 'data')

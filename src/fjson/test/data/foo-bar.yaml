@@ -1,0 +1,7 @@
+_meta:
+  com.liquid-labs.federated-json:
+    mountSpecs:
+      - path: .baz
+        file: ${TEST_DIR}/data/baz.json
+baz: null
+some-key: I'm a string!

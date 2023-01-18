@@ -12,7 +12,7 @@ FJSON_CJS_LIB:=dist/fjson.js
 FJSON_MODULE_LIB:=dist/fjson.mjs
 
 FJSON_TEST_DATA_SRC:=$(FJSON_SRC)/test/data
-FJSON_TEST_DATA_FILES:=$(shell find $(FJSON_TEST_DATA_SRC) -name "*.json")
+FJSON_TEST_DATA_FILES:=$(shell find $(FJSON_TEST_DATA_SRC) -name "*.json" -o -name "*.yaml")
 FJSON_TEST_DATA:=$(patsubst $(FJSON_SRC)/%, test-staging/%, $(FJSON_TEST_DATA_FILES))
 
 FJSON_TEST_SRC_FILES:=$(shell find $(FJSON_SRC) -name "*.js" -o -name "*.mjs")
