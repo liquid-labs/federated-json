@@ -31,15 +31,13 @@ const writeFJSONTests = () => {
       const testEmbed = { bar : "I'm an embed!" }
 
       const absoluteMountFileMatrix = [
-        [ `${testDir}/single-mount-file-abs.json`, `${testDir}/bar-abs.json` ],
-        [ `${testDir}/single-mount-file-abs.yaml`, `${testDir}/bar-abs.json` ],
-        [ `${testDir}/single-mount-file-abs.json`, `${testDir}/bar-abs.yaml` ],
-        [ `${testDir}/single-mount-file-abs.yaml`, `${testDir}/bar-abs.yaml` ]
+        [`${testDir}/single-mount-file-abs.json`, `${testDir}/bar-abs.json`],
+        [`${testDir}/single-mount-file-abs.yaml`, `${testDir}/bar-abs.json`],
+        [`${testDir}/single-mount-file-abs.json`, `${testDir}/bar-abs.yaml`],
+        [`${testDir}/single-mount-file-abs.yaml`, `${testDir}/bar-abs.yaml`]
       ]
-      for (const [ rootTestFile, barTestFile ] of absoluteMountFileMatrix) {
+      for (const [rootTestFile, barTestFile] of absoluteMountFileMatrix) {
         describe('absolute mount spec', () => {
-          const rootTestFile = `${testDir}/single-mount-file-abs.json`
-          const barTestFile = `${testDir}/bar-abs.json`
           const testData = {
             _meta : { [FJSON_META_DATA_KEY] : { mountSpecs : [{ path : '.foo', file : barTestFile }] } },
             foo   : testEmbed
@@ -54,12 +52,14 @@ const writeFJSONTests = () => {
             // the written object should have a 'null' foo
             const exemplar = Object.assign({}, testData)
             exemplar.foo = null
-            expect(JSON.parse(rootFileContents)).toEqual(exemplar)
+            const data = rootTestFile.endsWith('.json') ? JSON.parse(rootFileContents) : yaml.load(rootFileContents)
+            expect(data).toEqual(exemplar)
           })
 
           test('writes leaf file', () => {
             const barContents = fs.readFileSync(barTestFile)
-            expect(JSON.parse(barContents)).toEqual(testEmbed)
+            const data = barTestFile.endsWith('.json') ? JSON.parse(barContents) : yaml.load(barContents)
+            expect(data).toEqual(testEmbed)
           })
 
           test('leaves source JSON intact', () => {
@@ -102,7 +102,7 @@ const writeFJSONTests = () => {
       })
     })
 
-    for (const rootTestFile of [ `${testDir}/single-mount-dir.json`, `${testDir}/single-mount-dir.yaml` ]) {
+    for (const rootTestFile of [`${testDir}/single-mount-dir.json`, `${testDir}/single-mount-dir.yaml`]) {
       describe('write single dir mount', () => {
         const barTestDir = `${testDir}/bar`
         const barValue = "I'm an embed!"

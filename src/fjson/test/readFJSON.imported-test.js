@@ -33,6 +33,7 @@ const expectedRootObject = {
 }
 
 const expectedRootObjectYamlSub = structuredClone(expectedRootObject)
+// eslint-disable-next-line no-template-curly-in-string
 expectedRootObjectYamlSub._meta[FJSON_META_DATA_KEY].mountSpecs[0].file = '${TEST_DIR}/data/foo-bar.yaml'
 
 const expectedRootObjectRel = {
