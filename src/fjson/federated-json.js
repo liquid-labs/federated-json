@@ -42,12 +42,18 @@ const jsonRE = /\.json$/
 
 /**
 * Reads a JSON file and processes for federated mount points to construct a composite JSON object from one or more
-* files. May take a single `file` optinally followed by an options object or a single options object containing a `file` option.
+* files. May take a single `file` optinally followed by an options object or a single options object containing a 
+* `file` option.
 *
 * ### Options
 *
 * - `file`: (req) the path to the root file.
-* - `noMtime`: by default, the root files 'modified time' is calculated and stored as `myMeta`. The calculated mtime is greatest mtime of all the federated
+* - `noMtime`: by default, the root files 'modified time' is calculated and stored as `myMeta`. The calculated mtime 
+*    is greatest mtime of all the federated
+* - `overrides`: a map of paths to `file:` or `dir:` paths used to override the meta-defined specs
+* - `rememberSource`: remember the source path for the object as `_meta.sourceFile` for objects and the named field 
+*   sourceFile` for arrays.
+* - `separateMeta`: separates the meta data and returns `[data, _metaData]``
 */
 const readFJSON = (...args) => {
   let file, noMtime, overrides, rememberSource, separateMeta, _contextFilePath, _metaData, _metaDatas, _metaPaths, _contextJSONPath
