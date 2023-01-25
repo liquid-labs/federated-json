@@ -136,6 +136,12 @@ const readTable = [
 
 const readFJSONTests = () => {
   describe('readFJSON', () => {
+    test('raises an exception when second argument is not an object', () => 
+      expect(() => readFJSON('foo.json', 'bad argument')).toThrow())
+
+    test('raises an exception when there are arguments following an initial parameter object', () =>
+      expect(() => readFJSON({ file: 'foo.json' }, 'bad argument')).toThrow())
+
     test.each(readTable)('loads $description', ({ file, expected }) => {
       const data = readFJSON(file, { noMtime : true })
       expect(data).toEqual(expected)
