@@ -75,3 +75,10 @@
 ## Release 1.0.0-alpha.31
 * _**hotfix**_: add support for working with yaml files _(zane@liquid-labs.com; 2023-01-18T16:56:59.000Z)_
 * _**hotfix**_: lint fixes and fixed logic error in tests _(zane@liquid-labs.com; 2023-01-18T23:07:54.000Z)_
+
+## Release 1.0.0-alpha.32
+* _**hotfix**_: documented all readFJSON options _(zane@liquid-labs.com; 2023-01-25T21:56:03.000Z)_
+* _**hotfix**_: add tests for invalid calls to readFJSON _(zane@liquid-labs.com; 2023-01-25T22:17:23.000Z)_
+* _**hotfix**_: update core-js-pure _(zane@liquid-labs.com; 2023-01-25T22:53:09.000Z)_
+* _**hotfix**_: implement and test 'createOnNone'; simplify constructor argument logic _(zane@liquid-labs.com; 2023-01-26T21:43:25.000Z)_
+* _**hotfix**_: lint fixes _(zane@liquid-labs.com; 2023-01-26T21:44:50.000Z)_
