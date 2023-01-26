@@ -1,5 +1,6 @@
 /* global beforeAll describe expect test */
 import fs from 'node:fs/promises'
+import fsPath from 'node:path'
 
 import structuredClone from 'core-js-pure/actual/structured-clone'
 
@@ -137,11 +138,11 @@ const readTable = [
 
 const readFJSONTests = () => {
   describe('readFJSON', () => {
-    test('raises an exception when second argument is not an object', () => 
+    test('raises an exception when second argument is not an object', () =>
       expect(() => readFJSON('foo.json', 'bad argument')).toThrow())
 
     test('raises an exception when there are arguments following an initial parameter object', () =>
-      expect(() => readFJSON({ file: 'foo.json' }, 'bad argument')).toThrow())
+      expect(() => readFJSON({ file : 'foo.json' }, 'bad argument')).toThrow())
 
     test.each(readTable)('loads $description', ({ file, expected }) => {
       const data = readFJSON(file, { noMtime : true })
@@ -198,10 +199,10 @@ const readFJSONTests = () => {
 
     describe('createOnNone = {}', () => {
       let data
-      const createOnNoneFile = __dirname + '/createOnNoneA.json'
-      const initialData = { a: 1 }
+      const createOnNoneFile = fsPath.join(__dirname, 'createOnNoneA.json')
+      const initialData = { a : 1 }
       beforeAll(() => {
-        data = readFJSON({ file: createOnNoneFile, createOnNone: initialData })
+        data = readFJSON({ file : createOnNoneFile, createOnNone : initialData })
       })
 
       test('returns the initialized data', () => {
@@ -210,7 +211,7 @@ const readFJSONTests = () => {
         expect(cloneData).toEqual(initialData)
       })
 
-      test('creates the file with the initial data string', async () => {
+      test('creates the file with the initial data string', async() => {
         const fileData = JSON.parse(await fs.readFile(createOnNoneFile))
         expect(fileData).toEqual(initialData)
       })
