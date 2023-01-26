@@ -1,4 +1,5 @@
-/* global describe expect test */
+/* global beforeAll describe expect test */
+import fs from 'node:fs/promises'
 
 import structuredClone from 'core-js-pure/actual/structured-clone'
 
@@ -193,6 +194,26 @@ const readFJSONTests = () => {
     test('throws useful error when no data source is empty in mnt spec', () => {
       const badMntSpec = `${testpath}/bad-mnt-spec-empty-data-path.json`
       expect(() => { readFJSON(badMntSpec) }).toThrow(/No 'path' specified/)
+    })
+
+    describe('createOnNone = {}', () => {
+      let data
+      const createOnNoneFile = __dirname + '/createOnNoneA.json'
+      const initialData = { a: 1 }
+      beforeAll(() => {
+        data = readFJSON({ file: createOnNoneFile, createOnNone: initialData })
+      })
+
+      test('returns the initialized data', () => {
+        const cloneData = structuredClone(data)
+        delete cloneData._meta
+        expect(cloneData).toEqual(initialData)
+      })
+
+      test('creates the file with the initial data string', async () => {
+        const fileData = JSON.parse(await fs.readFile(createOnNoneFile))
+        expect(fileData).toEqual(initialData)
+      })
     })
 
     describe('overrides', () => {

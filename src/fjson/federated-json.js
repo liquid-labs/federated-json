@@ -7,6 +7,7 @@
 import * as fs from 'node:fs'
 import * as fsPath from 'node:path'
 
+import structuredClone from 'core-js-pure/actual/structured-clone'
 import yaml from 'js-yaml'
 
 import { envTemplateString, processPath, testJsonPaths } from './utils'
@@ -48,6 +49,8 @@ const jsonRE = /\.json$/
 * ### Options
 *
 * - `file`: (req) the path to the root file.
+* - `createOnNone`: will create a file and initialize it to the parameter value if no file exists. The parameter value 
+*    must be valid JSON. A deep-clone will be created, so you should work with the returned data.
 * - `noMtime`: by default, the root files 'modified time' is calculated and stored as `myMeta`. The calculated mtime 
 *    is greatest mtime of all the federated
 * - `overrides`: a map of paths to `file:` or `dir:` paths used to override the meta-defined specs
@@ -56,7 +59,8 @@ const jsonRE = /\.json$/
 * - `separateMeta`: separates the meta data and returns `[data, _metaData]``
 */
 const readFJSON = (...args) => {
-  let file, noMtime, overrides, rememberSource, separateMeta, _contextFilePath, _metaData, _metaDatas, _metaPaths, _contextJSONPath
+  let file, parameters
+
   if (!args || args.length === 0) throw new Error("Invalid 'no argument' call to readFJSON.")
   else if (args.length > 2) throw new Error('Invalid call to readFJSON; try expects (string, options) or (options).')
   else if (typeof args[0] === 'string') {
@@ -64,34 +68,45 @@ const readFJSON = (...args) => {
     if (args.length === 2 && args[1] && typeof args[1] !== 'object') {
       throw new Error('Unexpected second argument to readFJSON; expects options object.')
     }
-    ({ noMtime = false, overrides, rememberSource, separateMeta, _contextFilePath, _metaData, _metaDatas = [], _metaPaths, _contextJSONPath } = args[1] || {})
+    parameters = args[1] || {}
   }
   else { // treat args[0] as object and see what happens!
     if (args.length > 1) {
       throw new Error('Invalid call to readFJSON; when passing options as first arg, it must be the only arg.')
     }
-
-    ({ file, noMtime = false, overrides, rememberSource, separateMeta, _contextFilePath, _metaData, _metaDatas = [], _metaPaths, _contextJSONPath } = args[0])
+    parameters = args[0];
+    ({ file } = parameters)
   }
+
+  let { _metaData, _metaPaths } = parameters
+  const { noMtime = false, createOnNone, overrides, rememberSource, separateMeta, _contextFilePath, _metaDatas = [], _contextJSONPath } = parameters
 
   if (!file) { throw new Error(`File path invalid. (${file})`) }
 
   const processedPath = processPath(file, _contextFilePath)
-  if (!fs.existsSync(processedPath)) {
-    const msg = `No such file: '${file}'` + (file !== processedPath ? ` ('${processedPath}')` : '')
-    throw new Error(msg)
-  }
 
-  const dataBits = fs.readFileSync(processedPath)
-  let data // actually, would love 'const', but need to set inside try block and don'w want to expand scope of the try.
-  try {
-    data = file.endsWith('.json') ? JSON.parse(dataBits) : yaml.load(dataBits)
+  let data // would love to use 'const' here
+  if (createOnNone !== undefined && !fs.existsSync(processedPath)) {
+    data = structuredClone(createOnNone)
+    fs.writeFileSync(file, JSON.stringify(createOnNone, null, '  '))
   }
-  catch (e) {
-    if (e instanceof SyntaxError) {
-      throw new SyntaxError(`${e.message} while processing ${file}`)
+  else {
+    if (!fs.existsSync(processedPath)) {
+      const msg = `No such file: '${file}'` + (file !== processedPath ? ` ('${processedPath}')` : '')
+      throw new Error(msg)
+    }
+
+    const dataBits = fs.readFileSync(processedPath)
+    try {
+      data = file.endsWith('.json') ? JSON.parse(dataBits) : yaml.load(dataBits)
+    }
+    catch (e) {
+      if (e instanceof SyntaxError) {
+        throw new SyntaxError(`${e.message} while processing ${file}`)
+      }
     }
   }
+  
 
   if (rememberSource === true) {
     if (typeof data === 'object' && !Array.isArray(data)) { setSource({ data, file }) }
