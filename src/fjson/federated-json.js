@@ -88,6 +88,7 @@ const readFJSON = (...args) => {
   let data // would love to use 'const' here
   if (createOnNone !== undefined && !fs.existsSync(processedPath)) {
     data = structuredClone(createOnNone)
+    fs.mkdirSync(fsPath.dirname(file), { recursive : true })
     fs.writeFileSync(file, JSON.stringify(createOnNone, null, '  '))
   }
   else {
