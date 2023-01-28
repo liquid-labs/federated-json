@@ -85,3 +85,4 @@
 
 ## Release 1.0.0-alpha.33
 * _**hotfix**_: create path for 'createOnNone' file _(zane@liquid-labs.com; 2023-01-28T20:16:02.000Z)_
+* _**hotfix**_: updated CHANGELOGE.md for release (by liq) _(zane@liquid-labs.com; 2023-01-28T20:16:20.000Z)_
