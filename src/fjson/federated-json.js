@@ -79,7 +79,14 @@ const readFJSON = (...args) => {
   }
 
   let { _metaData, _metaPaths } = parameters
-  const { noMtime = false, createOnNone, overrides, rememberSource, separateMeta, _contextFilePath, _metaDatas = [], _contextJSONPath } = parameters
+  const { 
+    createOnNone,
+    noMtime = false,
+    overrides,
+    rememberSource,
+    separateMeta,
+    _contextFilePath, _metaDatas = [], _contextJSONPath
+  } = parameters
 
   if (!file) { throw new Error(`File path invalid. (${file})`) }
 
