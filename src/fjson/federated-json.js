@@ -30,7 +30,7 @@ const addMountPoint = ({ data, path, file }) => {
   }
 
   const i = mountSpecs.findIndex((el) => el.path === path)
-  const mountSpec = { path : path, file }
+  const mountSpec = { path, file }
   if (i !== -1) {
     mountSpecs[i] = mountSpec
   }
@@ -79,7 +79,14 @@ const readFJSON = (...args) => {
   }
 
   let { _metaData, _metaPaths } = parameters
-  const { noMtime = false, createOnNone, overrides, rememberSource, separateMeta, _contextFilePath, _metaDatas = [], _contextJSONPath } = parameters
+  const {
+    createOnNone,
+    noMtime = false,
+    overrides,
+    rememberSource,
+    separateMeta,
+    _contextFilePath, _metaDatas = [], _contextJSONPath
+  } = parameters
 
   if (!file) { throw new Error(`File path invalid. (${file})`) }
 
@@ -92,18 +99,13 @@ const readFJSON = (...args) => {
     fs.writeFileSync(file, JSON.stringify(createOnNone, null, '  '))
   }
   else {
-    if (!fs.existsSync(processedPath)) {
-      const msg = `No such file: '${file}'` + (file !== processedPath ? ` ('${processedPath}')` : '')
-      throw new Error(msg)
-    }
-
     const dataBits = fs.readFileSync(processedPath)
     try {
       data = file.endsWith('.json') ? JSON.parse(dataBits) : yaml.load(dataBits)
     }
     catch (e) {
       if (e instanceof SyntaxError) {
-        throw new SyntaxError(`${e.message} while processing ${file}`)
+        throw new SyntaxError(`${e.message} while processing ${file}`, { cause : e })
       }
     }
   }
@@ -417,7 +419,7 @@ const processMountSpec = ({ data, mntSpec, overrides, preserveOriginal, sourceFi
   file && (file = envTemplateString(file))
   dir && (dir = envTemplateString(dir))
 
-  const { penultimateRef: mountPoint, finalKey, newData } = processJSONPath({ path : path, data, preserveOriginal })
+  const { penultimateRef: mountPoint, finalKey, newData } = processJSONPath({ path, data, preserveOriginal })
 
   return { file, dir, path, mountPoint, finalKey, newData }
 }

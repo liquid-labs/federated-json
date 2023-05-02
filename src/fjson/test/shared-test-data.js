@@ -1,4 +1,4 @@
-const testpath = './src/fjson/test/data'
+const testpath = './fjson/test/data'
 
 const EMPTY_OBJ_SRC = `${testpath}/empty-object.json`
 
