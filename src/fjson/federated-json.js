@@ -79,7 +79,7 @@ const readFJSON = (...args) => {
   }
 
   let { _metaData, _metaPaths } = parameters
-  const { 
+  const {
     createOnNone,
     noMtime = false,
     overrides,
@@ -99,18 +99,13 @@ const readFJSON = (...args) => {
     fs.writeFileSync(file, JSON.stringify(createOnNone, null, '  '))
   }
   else {
-    if (!fs.existsSync(processedPath)) {
-      const msg = `No such file: '${file}'` + (file !== processedPath ? ` ('${processedPath}')` : '')
-      throw new Error(msg)
-    }
-
     const dataBits = fs.readFileSync(processedPath)
     try {
       data = file.endsWith('.json') ? JSON.parse(dataBits) : yaml.load(dataBits)
     }
     catch (e) {
       if (e instanceof SyntaxError) {
-        throw new SyntaxError(`${e.message} while processing ${file}`)
+        throw new SyntaxError(`${e.message} while processing ${file}`, { cause : e })
       }
     }
   }
