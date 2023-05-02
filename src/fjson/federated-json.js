@@ -30,7 +30,7 @@ const addMountPoint = ({ data, path, file }) => {
   }
 
   const i = mountSpecs.findIndex((el) => el.path === path)
-  const mountSpec = { path : path, file }
+  const mountSpec = { path, file }
   if (i !== -1) {
     mountSpecs[i] = mountSpec
   }
@@ -419,7 +419,7 @@ const processMountSpec = ({ data, mntSpec, overrides, preserveOriginal, sourceFi
   file && (file = envTemplateString(file))
   dir && (dir = envTemplateString(dir))
 
-  const { penultimateRef: mountPoint, finalKey, newData } = processJSONPath({ path : path, data, preserveOriginal })
+  const { penultimateRef: mountPoint, finalKey, newData } = processJSONPath({ path, data, preserveOriginal })
 
   return { file, dir, path, mountPoint, finalKey, newData }
 }
