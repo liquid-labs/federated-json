@@ -1,6 +1,6 @@
 {
   "name": "@liquid-labs/federated-json",
-  "version": "1.0.0-alpha.33",
+  "version": "1.0.0-alpha.34",
   "description": "Library that builds a single JSON object from multiple JSON files.",
   "main": "dist/federated-json.js",
   "scripts": {
